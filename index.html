@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- Look App Native iPhone -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pellets">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/785/785116.png">
+
+    <title>PelletTracker Pro Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#d97706', 600: '#b45309' },
+                        ios: { bg: '#f2f2f7', card: '#ffffff', text: '#1e293b', secondary: '#94a3b8' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --safe-area-top: env(safe-area-inset-top);
+            --safe-area-bottom: env(safe-area-inset-bottom);
+        }
+        body { 
+            background-color: #f2f2f7; 
+            color: #1e293b;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            padding-top: var(--safe-area-top);
+            padding-bottom: calc(80px + var(--safe-area-bottom));
+        }
+        .ios-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin-bottom: 16px;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid #c6c6c8;
+            padding-bottom: var(--safe-area-bottom);
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+        .nav-item {
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #8e8e93;
+            transition: all 0.2s;
+        }
+        .nav-item.active { color: #d97706; }
+        .nav-item span.icon { font-size: 22px; margin-bottom: 2px; }
+        
+        .tab-content { display: none; padding: 16px; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        input {
+            -webkit-appearance: none;
+            outline: none;
+        }
+        .btn-press:active { transform: scale(0.96); opacity: 0.8; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Chosen Palette: iOS System Light (f2f2f7) with Amber accents. Designed for high legibility on mobile screens. -->
+    <!-- Application Structure Plan: Mobile PWA with a persistent bottom navigation bar. Separates immediate data entry from long-term history. Corrected year alignment logic for continuous charts. -->
+    <!-- Visualization & Content Choices: Uses the "Perfect Alignment" Chart.js plugin for historical years. NO SVG. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Onglet 1 : RÉSUMÉ & SAISIE -->
+    <div id="tab-dashboard" class="tab-content active">
+        <header class="mb-6 flex justify-between items-end px-1">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight">Résumé</h1>
+                <p class="text-ios-secondary text-sm font-medium" id="last-date-mobile">Aucune donnée</p>
+            </div>
+            <button onclick="exportCSV()" class="bg-white p-3 rounded-full shadow-sm text-brand-500 btn-press border border-gray-100">💾</button>
+        </header>
+
+        <!-- KPI Grid -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="ios-card p-4">
+                <span class="text-[10px] font-black text-ios-secondary uppercase tracking-widest">30 Jours</span>
+                <div class="text-2xl font-black mt-1 flex items-baseline gap-1">
+                    <span id="kpi-30d">0</span><small class="text-xs font-bold text-gray-400">sacs</small>
+                </div>
+            </div>
+            <div class="ios-card p-4">
+                <span class="text-[10px] font-black text-ios-secondary uppercase tracking-widest">Cadence</span>
+                <div class="text-2xl font-black mt-1 text-brand-500 flex items-baseline gap-1">
+                    <span id="kpi-avg">0.0</span><small class="text-xs font-bold opacity-50">j</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Autonomie Card -->
+        <div class="ios-card p-5 bg-slate-900 text-white relative overflow-hidden mb-6">
+            <div class="absolute -right-6 -top-6 text-8xl opacity-10 rotate-12">⏳</div>
+            <div class="flex justify-between items-start relative z-10">
+                <div>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Autonomie</span>
+                    <div class="text-5xl font-black mt-1" id="kpi-auto">0</div>
+                    <p class="text-slate-400 text-xs font-medium mt-1">jours restants est.</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</span>
+                    <div class="mt-2 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700 flex items-center">
+                        <input type="number" id="stock-mobile" value="15" class="w-10 bg-transparent text-white font-black text-center text-xl">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Saisie Rapide -->
+        <div class="ios-card p-5 border-2 border-brand-500/20">
+            <h3 class="text-xs font-black text-brand-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span>✍️</span> Nouveau remplissage
+            </h3>
+            <div class="space-y-4">
+                <input type="datetime-local" id="add-date" class="w-full bg-ios-bg p-3 rounded-xl font-bold text-sm border-none">
+                <div class="flex gap-2">
+                    <input type="number" id="add-sacs" placeholder="Nb sacs" class="flex-1 bg-ios-bg p-4 rounded-xl font-black text-xl text-center border-none">
+                    <button onclick="addNewEntry()" class="bg-brand-500 text-white px-8 rounded-xl font-black btn-press shadow-md shadow-brand-500/20">AJOUTER</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet 2 : HISTORIQUE -->
+    <div id="tab-history" class="tab-content">
+        <h1 class="text-3xl font-extrabold mb-6 px-1">Historique</h1>
+        <div class="ios-card overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b text-[10px] font-black uppercase text-ios-secondary flex justify-between items-center">
+                <span>Journal des saisies</span>
+                <span id="entry-count" class="bg-brand-100 text-brand-600 px-2 py-1 rounded-full">0</span>
+            </div>
+            <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left text-sm">
+                    <tbody id="tbody-mobile" class="divide-y divide-gray-50"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onglet 3 : ANALYSES -->
+    <div id="tab-analytics" class="tab-content">
+        <h1 class="text-3xl font-extrabold mb-6 px-1 text-slate-800">Analyses</h1>
+        
+        <div class="ios-card p-4">
+            <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Volume par Année</h3>
+            <div id="year-grid-mobile" class="grid grid-cols-2 gap-2"></div>
+        </div>
+
+        <div class="ios-card p-4 overflow-hidden">
+            <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Évolution Historique</h3>
+            <div class="overflow-x-auto custom-scrollbar pb-2">
+                <div class="chart-container" style="min-width: 600px;">
+                    <canvas id="chart-hist-mobile"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ios-card p-4">
+            <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Saisonnalité</h3>
+            <div class="chart-container">
+                <canvas id="chart-yoy-mobile"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Basse -->
+    <nav class="bottom-nav">
+        <button onclick="setTab('dashboard')" id="nav-dashboard" class="nav-item active">
+            <span class="icon">🏠</span><span>SYNTHÈSE</span>
+        </button>
+        <button onclick="setTab('history')" id="nav-history" class="nav-item">
+            <span class="icon">📋</span><span>JOURNAL</span>
+        </button>
+        <button onclick="setTab('analytics')" id="nav-analytics" class="nav-item">
+            <span class="icon">📈</span><span>ANALYSES</span>
+        </button>
+        <label class="nav-item cursor-pointer">
+            <span class="icon">📁</span><span>IMPORT</span>
+            <input type="file" id="csv-mobile" accept=".csv" class="hidden" onchange="handleImport(this)">
+        </label>
+    </nav>
+
+    <script>
+        const STORAGE_KEY = 'pellet_mobile_final_v1';
+        const state = { data: [], stock: 15, currentTab: 'dashboard', charts: {} };
+        const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+
+        // Plugin de correction pour les lignes d'années (Exactement comme la version Expert)
+        const janLinesPlugin = {
+            id: 'janLines',
+            beforeDraw: chart => {
+                const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+                ctx.save();
+                ctx.setLineDash([4, 4]); ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+                chart.data.labels.forEach((label, index) => {
+                    if (label && label.startsWith('Jan')) {
+                        const xPos = x.getPixelForValue(index);
+                        const yearText = label.split(' ')[1] || '';
+                        ctx.beginPath(); ctx.moveTo(xPos, top); ctx.lineTo(xPos, bottom); ctx.stroke();
+                        ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 10px sans-serif';
+                        ctx.textAlign = 'center'; ctx.fillText(yearText, xPos, top + 12);
+                    }
+                });
+                ctx.restore();
+            }
+        };
+
+        function init() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('add-date').value = now.toISOString().slice(0, 16);
+
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const p = JSON.parse(saved);
+                    state.data = p.data.map(d => ({ date: new Date(d.ts), ts: d.ts, sacs: d.sacs }));
+                    state.stock = p.stock || 15;
+                    document.getElementById('stock-mobile').value = state.stock;
+                } catch (e) { state.data = []; }
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            if (state.data.length === 0) return;
+            const last = state.data[state.data.length - 1];
+            document.getElementById('last-date-mobile').textContent = last.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+            
+            const vol30 = state.data.reduce((acc, d) => d.ts > (last.ts - 30*86400000) ? acc + d.sacs : acc, 0);
+            const avg = vol30 / 30;
+            
+            document.getElementById('kpi-30d').textContent = vol30.toFixed(1);
+            document.getElementById('kpi-avg').textContent = avg.toFixed(1);
+            document.getElementById('kpi-auto').textContent = avg > 0 ? Math.floor(state.stock / avg) : 0;
+            document.getElementById('entry-count').textContent = state.data.length;
+
+            const tb = document.getElementById('tbody-mobile'); tb.innerHTML = '';
+            [...state.data].reverse().slice(0, 50).forEach(d => {
+                tb.insertAdjacentHTML('beforeend', `<tr class="border-b last:border-0 hover:bg-slate-50"><td class="p-4 text-xs font-bold capitalize">${d.date.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit', month:'short'})}<span class="text-ios-secondary ml-1 font-normal">${d.date.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span></td><td class="p-4 text-right font-black text-brand-600 text-base">+${d.sacs}</td></tr>`);
+            });
+
+            if (state.currentTab === 'analytics') updateAnalytics();
+        }
+
+        function updateAnalytics() {
+            const ym = {}; const minD = state.data[0].date;
+            state.data.forEach(d => { const y = d.date.getFullYear(); ym[y] = (ym[y]||0) + d.sacs; });
+            const gY = document.getElementById('year-grid-mobile'); gY.innerHTML = '';
+            Object.keys(ym).sort((a,b) => b-a).forEach(y => {
+                gY.insertAdjacentHTML('beforeend', `<div class="bg-ios-bg p-3 rounded-xl border border-gray-100"><span class="text-[9px] font-black text-ios-secondary block uppercase tracking-tighter">${y}</span><span class="font-black text-slate-800">${ym[y]} sacs</span></div>`);
+            });
+            renderCharts();
+        }
+
+        function renderCharts() {
+            const mm = new Map();
+            const minDate = state.data[0].date;
+            const maxDate = state.data[state.data.length - 1].date;
+            let cY = minDate.getFullYear(), cM = minDate.getMonth();
+            
+            while(cY < maxDate.getFullYear() || (cY === maxDate.getFullYear() && cM <= maxDate.getMonth())) {
+                const k = `${cY}-${String(cM).padStart(2,'0')}`;
+                mm.set(k, { label: `${MONTHS[cM]} ${cY}`, total: 0 });
+                cM++; if(cM>11){cM=0; cY++;}
+            }
+            state.data.forEach(d => {
+                const k = `${d.date.getFullYear()}-${String(d.date.getMonth()).padStart(2,'0')}`;
+                if(mm.has(k)) mm.get(k).total += d.sacs;
+            });
+            const hData = Array.from(mm.values());
+
+            const ctxH = document.getElementById('chart-hist-mobile').getContext('2d');
+            if(state.charts.h) state.charts.h.destroy();
+            state.charts.h = new Chart(ctxH, {
+                type: 'line',
+                data: { labels: hData.map(d => d.label), datasets: [{ data: hData.map(d => d.total), borderColor: '#d97706', backgroundColor: 'rgba(217,119,6,0.05)', fill: true, tension: 0.3, pointRadius: 2 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, layout: { padding: { top: 20 } } },
+                plugins: [janLinesPlugin]
+            });
+        }
+
+        function setTab(t) {
+            state.currentTab = t;
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + t).classList.add('active');
+            document.getElementById('nav-' + t).classList.add('active');
+            updateUI();
+        }
+
+        function addNewEntry() {
+            const d = new Date(document.getElementById('add-date').value);
+            const s = parseFloat(document.getElementById('add-sacs').value);
+            if (isNaN(s)) return;
+            state.data.push({ date: d, ts: d.getTime(), sacs: s });
+            state.data.sort((a,b) => a.ts - b.ts);
+            save(); updateUI();
+            document.getElementById('add-sacs').value = '';
+        }
+
+        function handleImport(input) {
+            const f = input.files[0]; if(!f) return;
+            const r = new FileReader();
+            r.onload = e => {
+                const lines = e.target.result.replace(/\r/g,'').split('\n');
+                const parsed = [];
+                lines.forEach(l => {
+                    const c = l.split(/[;,]/);
+                    if(c.length >= 2) {
+                        const dStr = c[0].trim().replace(' ','T');
+                        const d = new Date(dStr);
+                        const s = parseFloat(c[1]);
+                        if(!isNaN(d.getTime()) && !isNaN(s)) parsed.push({ date: d, ts: d.getTime(), sacs: s });
+                    }
+                });
+                if(parsed.length > 0) { state.data = parsed.sort((a,b) => a.ts - b.ts); save(); updateUI(); }
+            };
+            r.readAsText(f);
+        }
+
+        function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: state.data.map(d=>({ts:d.ts, sacs:d.sacs})), stock: state.stock })); }
+        function exportCSV() {
+            let csv = "Date;Sacs\n";
+            state.data.forEach(d => {
+                const dt = d.date;
+                csv += `${dt.getFullYear()}-${(dt.getMonth()+1).toString().padStart(2,'0')}-${dt.getDate().toString().padStart(2,'0')} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')};${d.sacs}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'Pellets_Export.csv'; a.click();
+        }
+
+        document.getElementById('stock-mobile').addEventListener('input', e => { state.stock = parseInt(e.target.value)||0; save(); updateUI(); });
+        init();
+    </script>
+</body>
+</html>
