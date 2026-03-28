@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="Pellets">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/785/785116.png">
 
-    <title>PelletTracker Pro Mobile</title>
+    <title>PelletTracker Mobile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -38,13 +38,15 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-tap-highlight-color: transparent;
             padding-top: var(--safe-area-top);
-            padding-bottom: calc(80px + var(--safe-area-bottom));
+            padding-bottom: calc(85px + var(--safe-area-bottom));
+            overflow-x: hidden; /* Empêche le swipe horizontal ! */
         }
         .ios-card {
             background: #ffffff;
             border-radius: 16px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             margin-bottom: 16px;
+            width: 100%;
         }
         .chart-container {
             position: relative;
@@ -74,6 +76,7 @@
             font-weight: 600;
             color: #8e8e93;
             transition: all 0.2s;
+            width: 25%; /* Force 4 colonnes exactes */
         }
         .nav-item.active { color: #d97706; }
         .nav-item span.icon { font-size: 22px; margin-bottom: 2px; }
@@ -95,11 +98,6 @@
 </head>
 <body>
 
-    <!-- Chosen Palette: iOS System Light (f2f2f7) with Amber accents. Designed for high legibility on mobile screens. -->
-    <!-- Application Structure Plan: Mobile PWA with a persistent bottom navigation bar. Separates immediate data entry from long-term history. Corrected year alignment logic for continuous charts. -->
-    <!-- Visualization & Content Choices: Uses the "Perfect Alignment" Chart.js plugin for historical years. NO SVG. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
     <!-- Onglet 1 : RÉSUMÉ & SAISIE -->
     <div id="tab-dashboard" class="tab-content active">
         <header class="mb-6 flex justify-between items-end px-1">
@@ -107,18 +105,35 @@
                 <h1 class="text-3xl font-extrabold tracking-tight">Résumé</h1>
                 <p class="text-ios-secondary text-sm font-medium" id="last-date-mobile">Aucune donnée</p>
             </div>
-            <button onclick="exportCSV()" class="bg-white p-3 rounded-full shadow-sm text-brand-500 btn-press border border-gray-100">💾</button>
+            <button onclick="exportCSV()" class="bg-white p-3 rounded-full shadow-sm text-brand-500 btn-press border border-gray-100 flex items-center justify-center" title="Sauvegarder">
+                <span style="font-size: 1.2rem;">💾</span>
+            </button>
         </header>
 
+        <!-- Saisie Rapide (Réparée pour les petits écrans) -->
+        <div class="ios-card p-5 border-2 border-brand-500/20">
+            <h3 class="text-xs font-black text-brand-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span>✍️</span> Nouveau remplissage
+            </h3>
+            <div class="flex flex-col gap-3">
+                <input type="datetime-local" id="add-date" class="w-full bg-ios-bg p-4 rounded-xl font-bold text-sm border-none">
+                <!-- Les deux éléments font exactement 50% de large avec un petit espace -->
+                <div class="flex gap-3 w-full">
+                    <input type="number" id="add-sacs" placeholder="Nb sacs" min="0.5" step="0.5" class="w-1/2 bg-ios-bg p-4 rounded-xl font-black text-xl text-center border-none m-0">
+                    <button onclick="addNewEntry()" class="w-1/2 bg-brand-500 text-white p-4 rounded-xl font-black text-lg btn-press shadow-md shadow-brand-500/20 m-0">AJOUTER</button>
+                </div>
+            </div>
+        </div>
+
         <!-- KPI Grid -->
-        <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="ios-card p-4">
+        <div class="grid grid-cols-2 gap-3 mb-4 w-full">
+            <div class="ios-card p-4 mb-0">
                 <span class="text-[10px] font-black text-ios-secondary uppercase tracking-widest">30 Jours</span>
                 <div class="text-2xl font-black mt-1 flex items-baseline gap-1">
                     <span id="kpi-30d">0</span><small class="text-xs font-bold text-gray-400">sacs</small>
                 </div>
             </div>
-            <div class="ios-card p-4">
+            <div class="ios-card p-4 mb-0">
                 <span class="text-[10px] font-black text-ios-secondary uppercase tracking-widest">Cadence</span>
                 <div class="text-2xl font-black mt-1 text-brand-500 flex items-baseline gap-1">
                     <span id="kpi-avg">0.0</span><small class="text-xs font-bold opacity-50">j</small>
@@ -138,22 +153,8 @@
                 <div class="text-right">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</span>
                     <div class="mt-2 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700 flex items-center">
-                        <input type="number" id="stock-mobile" value="15" class="w-10 bg-transparent text-white font-black text-center text-xl">
+                        <input type="number" id="stock-mobile" value="15" min="0" class="w-10 bg-transparent text-white font-black text-center text-xl m-0 p-0">
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Saisie Rapide -->
-        <div class="ios-card p-5 border-2 border-brand-500/20">
-            <h3 class="text-xs font-black text-brand-600 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span>✍️</span> Nouveau remplissage
-            </h3>
-            <div class="space-y-4">
-                <input type="datetime-local" id="add-date" class="w-full bg-ios-bg p-3 rounded-xl font-bold text-sm border-none">
-                <div class="flex gap-2">
-                    <input type="number" id="add-sacs" placeholder="Nb sacs" class="flex-1 bg-ios-bg p-4 rounded-xl font-black text-xl text-center border-none">
-                    <button onclick="addNewEntry()" class="bg-brand-500 text-white px-8 rounded-xl font-black btn-press shadow-md shadow-brand-500/20">AJOUTER</button>
                 </div>
             </div>
         </div>
@@ -167,7 +168,7 @@
                 <span>Journal des saisies</span>
                 <span id="entry-count" class="bg-brand-100 text-brand-600 px-2 py-1 rounded-full">0</span>
             </div>
-            <div class="max-h-[60vh] overflow-y-auto custom-scrollbar">
+            <div class="max-h-[65vh] overflow-y-auto custom-scrollbar">
                 <table class="w-full text-left text-sm">
                     <tbody id="tbody-mobile" class="divide-y divide-gray-50"></tbody>
                 </table>
@@ -203,27 +204,27 @@
 
     <!-- Navigation Basse -->
     <nav class="bottom-nav">
-        <button onclick="setTab('dashboard')" id="nav-dashboard" class="nav-item active">
+        <button onclick="setTab('dashboard')" id="nav-dashboard" class="nav-item active btn-press">
             <span class="icon">🏠</span><span>SYNTHÈSE</span>
         </button>
-        <button onclick="setTab('history')" id="nav-history" class="nav-item">
+        <button onclick="setTab('history')" id="nav-history" class="nav-item btn-press">
             <span class="icon">📋</span><span>JOURNAL</span>
         </button>
-        <button onclick="setTab('analytics')" id="nav-analytics" class="nav-item">
+        <button onclick="setTab('analytics')" id="nav-analytics" class="nav-item btn-press">
             <span class="icon">📈</span><span>ANALYSES</span>
         </button>
-        <label class="nav-item cursor-pointer">
+        <label class="nav-item cursor-pointer btn-press">
             <span class="icon">📁</span><span>IMPORT</span>
             <input type="file" id="csv-mobile" accept=".csv" class="hidden" onchange="handleImport(this)">
         </label>
     </nav>
 
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v1';
+        const STORAGE_KEY = 'pellet_mobile_final_v2';
         const state = { data: [], stock: 15, currentTab: 'dashboard', charts: {} };
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
 
-        // Plugin de correction pour les lignes d'années (Exactement comme la version Expert)
+        // Plugin de correction pour les lignes d'années
         const janLinesPlugin = {
             id: 'janLines',
             beforeDraw: chart => {
@@ -243,12 +244,33 @@
             }
         };
 
+        // Parseur robuste pour l'import CSV (Gère JJ/MM/AAAA et YYYY-MM-DD)
+        function parseDateRobust(dateStr) {
+            if (!dateStr) return null;
+            const cleanStr = dateStr.trim();
+            const datePart = cleanStr.split(/[ T]/)[0];
+            const timePart = cleanStr.split(/[ T]/)[1] || "00:00:00";
+            
+            if (datePart.includes('/')) {
+                const parts = datePart.split('/');
+                if (parts.length >= 3) {
+                    let d = parseInt(parts[0], 10), m = parseInt(parts[1], 10) - 1, y = parseInt(parts[2], 10);
+                    if (y < 100) y += 2000;
+                    const t = timePart.split(':');
+                    return new Date(y, m, d, parseInt(t[0]) || 0, parseInt(t[1]) || 0);
+                }
+            } else if (datePart.includes('-')) {
+                return new Date(cleanStr.replace(' ', 'T'));
+            }
+            return null;
+        }
+
         function init() {
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
-            const saved = localStorage.getItem(STORAGE_KEY);
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v1');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
@@ -261,7 +283,19 @@
         }
 
         function updateUI() {
-            if (state.data.length === 0) return;
+            const tb = document.getElementById('tbody-mobile');
+            
+            if (state.data.length === 0) {
+                document.getElementById('last-date-mobile').textContent = "Aucune donnée";
+                document.getElementById('kpi-30d').textContent = "0";
+                document.getElementById('kpi-avg').textContent = "0.0";
+                document.getElementById('kpi-auto').textContent = "0";
+                document.getElementById('entry-count').textContent = "0";
+                tb.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-400">Importez un CSV ou ajoutez un sac.</td></tr>';
+                if (state.currentTab === 'analytics') updateAnalytics();
+                return;
+            }
+
             const last = state.data[state.data.length - 1];
             document.getElementById('last-date-mobile').textContent = last.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
             
@@ -273,25 +307,52 @@
             document.getElementById('kpi-auto').textContent = avg > 0 ? Math.floor(state.stock / avg) : 0;
             document.getElementById('entry-count').textContent = state.data.length;
 
-            const tb = document.getElementById('tbody-mobile'); tb.innerHTML = '';
-            [...state.data].reverse().slice(0, 50).forEach(d => {
-                tb.insertAdjacentHTML('beforeend', `<tr class="border-b last:border-0 hover:bg-slate-50"><td class="p-4 text-xs font-bold capitalize">${d.date.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit', month:'short'})}<span class="text-ios-secondary ml-1 font-normal">${d.date.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span></td><td class="p-4 text-right font-black text-brand-600 text-base">+${d.sacs}</td></tr>`);
+            // Remplissage du tableau avec bouton suppression !
+            tb.innerHTML = '';
+            [...state.data].reverse().slice(0, 100).forEach(d => {
+                tb.insertAdjacentHTML('beforeend', `
+                    <tr class="border-b last:border-0 hover:bg-slate-50 transition-colors">
+                        <td class="p-4 text-xs font-bold capitalize">${d.date.toLocaleDateString('fr-FR', {weekday:'short', day:'2-digit', month:'short'})}<br><span class="text-ios-secondary font-normal">${d.date.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span></td>
+                        <td class="p-4 text-right font-black text-brand-600 text-lg">+${d.sacs}</td>
+                        <td class="p-4 w-12 text-center align-middle">
+                            <button onclick="deleteEntry(${d.ts})" class="text-red-400 font-bold text-2xl active:scale-90 transition-transform">×</button>
+                        </td>
+                    </tr>
+                `);
             });
 
             if (state.currentTab === 'analytics') updateAnalytics();
         }
 
         function updateAnalytics() {
-            const ym = {}; const minD = state.data[0].date;
+            const gY = document.getElementById('year-grid-mobile');
+            if (state.data.length === 0) {
+                gY.innerHTML = '<p class="text-xs text-gray-400 col-span-2">Aucune donnée</p>';
+                return;
+            }
+
+            const ym = {}; const minD = state.data[0].date; const maxD = state.data[state.data.length - 1].date;
             state.data.forEach(d => { const y = d.date.getFullYear(); ym[y] = (ym[y]||0) + d.sacs; });
-            const gY = document.getElementById('year-grid-mobile'); gY.innerHTML = '';
+            
+            gY.innerHTML = '';
             Object.keys(ym).sort((a,b) => b-a).forEach(y => {
-                gY.insertAdjacentHTML('beforeend', `<div class="bg-ios-bg p-3 rounded-xl border border-gray-100"><span class="text-[9px] font-black text-ios-secondary block uppercase tracking-tighter">${y}</span><span class="font-black text-slate-800">${ym[y]} sacs</span></div>`);
+                const yi = parseInt(y); let d = 365;
+                if (yi === minD.getFullYear()) d = Math.max(1, Math.ceil((new Date(yi,11,31)-minD)/86400000));
+                // Correction du bug : utilise maxD au lieu de new Date() pour les années incomplètes !
+                else if (yi === maxD.getFullYear()) d = Math.max(1, Math.ceil((maxD-new Date(yi,0,1))/86400000));
+                
+                gY.insertAdjacentHTML('beforeend', `
+                    <div class="bg-ios-bg p-3 rounded-xl border border-gray-100 flex flex-col justify-center items-center">
+                        <span class="text-[10px] font-black text-ios-secondary block uppercase tracking-tighter">${y}</span>
+                        <span class="font-black text-slate-800 text-lg">${ym[y]} <small class="text-[10px] font-normal text-gray-500">sacs</small></span>
+                    </div>
+                `);
             });
             renderCharts();
         }
 
         function renderCharts() {
+            if (state.data.length === 0) return;
             const mm = new Map();
             const minDate = state.data[0].date;
             const maxDate = state.data[state.data.length - 1].date;
@@ -328,48 +389,91 @@
         }
 
         function addNewEntry() {
-            const d = new Date(document.getElementById('add-date').value);
+            const dStr = document.getElementById('add-date').value;
             const s = parseFloat(document.getElementById('add-sacs').value);
-            if (isNaN(s)) return;
+            if (!dStr || isNaN(s)) {
+                alert("Veuillez renseigner une date et une quantité valide !");
+                return;
+            }
+            const d = new Date(dStr);
             state.data.push({ date: d, ts: d.getTime(), sacs: s });
             state.data.sort((a,b) => a.ts - b.ts);
             save(); updateUI();
             document.getElementById('add-sacs').value = '';
+            alert("✅ Sac(s) ajouté(s) avec succès !");
+        }
+
+        function deleteEntry(ts) {
+            if (confirm("Supprimer définitivement ce remplissage ?")) {
+                state.data = state.data.filter(d => d.ts !== ts);
+                save(); updateUI();
+            }
         }
 
         function handleImport(input) {
             const f = input.files[0]; if(!f) return;
             const r = new FileReader();
             r.onload = e => {
-                const lines = e.target.result.replace(/\r/g,'').split('\n');
+                const text = e.target.result;
+                const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim().length > 0);
                 const parsed = [];
-                lines.forEach(l => {
-                    const c = l.split(/[;,]/);
-                    if(c.length >= 2) {
-                        const dStr = c[0].trim().replace(' ','T');
-                        const d = new Date(dStr);
-                        const s = parseFloat(c[1]);
-                        if(!isNaN(d.getTime()) && !isNaN(s)) parsed.push({ date: d, ts: d.getTime(), sacs: s });
+                let dIdx = -1, qIdx = -1;
+
+                // Lecture Intelligente des colonnes
+                for (let i = 0; i < Math.min(10, lines.length); i++) {
+                    const cols = lines[i].split(/[,;]/);
+                    const low = cols.map(c => c.trim().toLowerCase());
+                    const pd = low.findIndex(c => c.includes('date') || c.includes('horodatage'));
+                    const pq = low.findIndex(c => c.includes('quantit') || c.includes('sac') || c === 'qte');
+                    if (pd !== -1 && pq !== -1) { dIdx = pd; qIdx = pq; break; }
+                }
+                if (dIdx === -1) { dIdx = 0; qIdx = 1; }
+
+                lines.forEach((l, idx) => {
+                    const cols = l.split(/[,;]/);
+                    if (cols.length > Math.max(dIdx, qIdx)) {
+                        const rd = cols[dIdx].replace(/"/g, ''), rq = cols[qIdx].replace(/"/g, '');
+                        const val = parseFloat(rq.replace(',', '.').replace(/[^0-9.-]/g, ''));
+                        const dobj = parseDateRobust(rd); // Utilisation du lecteur robuste
+                        
+                        if (dobj && !isNaN(dobj.getTime()) && !isNaN(val) && val > 0) {
+                            parsed.push({ date: dobj, ts: dobj.getTime(), sacs: val });
+                        }
                     }
                 });
-                if(parsed.length > 0) { state.data = parsed.sort((a,b) => a.ts - b.ts); save(); updateUI(); }
+
+                if(parsed.length > 0) { 
+                    state.data = parsed.sort((a,b) => a.ts - b.ts); 
+                    save(); 
+                    updateUI(); 
+                    alert(`✅ Import réussi : ${parsed.length} lignes chargées.`);
+                } else {
+                    alert("❌ Erreur : Aucune donnée lisible dans ce fichier.");
+                }
+                input.value = ''; // Réinitialise l'input file
             };
             r.readAsText(f);
         }
 
         function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: state.data.map(d=>({ts:d.ts, sacs:d.sacs})), stock: state.stock })); }
+        
         function exportCSV() {
-            let csv = "Date;Sacs\n";
+            if(state.data.length === 0) {
+                alert("Aucune donnée à exporter.");
+                return;
+            }
+            let csv = "Date;Quantité\n";
             state.data.forEach(d => {
                 const dt = d.date;
                 csv += `${dt.getFullYear()}-${(dt.getMonth()+1).toString().padStart(2,'0')}-${dt.getDate().toString().padStart(2,'0')} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')};${d.sacs}\n`;
             });
-            const blob = new Blob([csv], { type: 'text/csv' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = 'Pellets_Export.csv'; a.click();
         }
 
         document.getElementById('stock-mobile').addEventListener('input', e => { state.stock = parseInt(e.target.value)||0; save(); updateUI(); });
+        
         init();
     </script>
 </body>
