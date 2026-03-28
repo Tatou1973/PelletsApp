@@ -92,9 +92,7 @@
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        /* ========================================================= */
-        /* CORRECTION DÉFINITIVE CSS POUR LES BOUTONS D'ANNÉES       */
-        /* ========================================================= */
+        /* Magie CSS native pour les filtres d'années */
         .year-toggle .filter-btn {
             background-color: #ffffff;
             color: #64748b;
@@ -124,11 +122,46 @@
         
         <header class="mb-6 flex justify-between items-center px-1">
             <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-brand-600 rounded-full flex items-center justify-center text-white text-2xl shadow-lg shadow-brand-500/30">
-                    🔥
+                <!-- NOUVEAU LOGO ANIMÉ RIGOLO (SVG) -->
+                <div class="w-14 h-14 relative flex items-center justify-center">
+                    <svg viewBox="0 0 100 100" class="w-full h-full absolute drop-shadow-md overflow-visible">
+                        <style>
+                            @keyframes flicker {
+                                0%, 100% { transform: scale(1) skewX(0deg); fill: #f59e0b; }
+                                50% { transform: scale(1.05) skewX(-5deg); fill: #fbbf24; }
+                            }
+                            @keyframes bounce-pellet {
+                                0%, 100% { transform: translateY(0); }
+                                50% { transform: translateY(-4px); }
+                            }
+                            @keyframes blink {
+                                0%, 96%, 100% { transform: scaleY(1); }
+                                98% { transform: scaleY(0.1); }
+                            }
+                            .svg-flame { transform-origin: 50% 60%; animation: flicker 0.8s infinite alternate ease-in-out; }
+                            .svg-pellet { animation: bounce-pellet 2.5s infinite ease-in-out; }
+                            .svg-eye { animation: blink 4s infinite; transform-origin: center; }
+                        </style>
+                        <g class="svg-pellet">
+                            <!-- Flamme animée -->
+                            <path class="svg-flame" d="M50 15 C 65 35 70 50 50 65 C 30 50 35 35 50 15 Z" fill="#f59e0b"/>
+                            <path class="svg-flame" style="animation-delay: 0.2s; transform: scale(0.6);" d="M50 25 C 60 40 65 55 50 65 C 35 55 40 40 50 25 Z" fill="#fef08a"/>
+                            
+                            <!-- Corps du granulé -->
+                            <path d="M 30 55 L 30 80 Q 50 90 70 80 L 70 55 Z" fill="#78350f"/>
+                            <ellipse cx="50" cy="55" rx="20" ry="10" fill="#b45309"/>
+                            
+                            <!-- Visage Kawaii/Rigolo -->
+                            <ellipse class="svg-eye" cx="42" cy="70" rx="2.5" ry="3.5" fill="#fff"/>
+                            <ellipse class="svg-eye" cx="58" cy="70" rx="2.5" ry="3.5" fill="#fff"/>
+                            <ellipse cx="37" cy="73" rx="2.5" ry="1.5" fill="#fca5a5" opacity="0.6"/>
+                            <ellipse cx="63" cy="73" rx="2.5" ry="1.5" fill="#fca5a5" opacity="0.6"/>
+                            <path d="M 46 76 Q 50 80 54 76" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        </g>
+                    </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight">Pelletor</h1>
+                    <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-700">Pelletor</h1>
                     <p class="text-ios-secondary text-sm font-medium mt-0.5" id="last-date-mobile">Aucune donnée</p>
                 </div>
             </div>
@@ -315,7 +348,7 @@
     <!-- SCRIPT APPLICATION                             -->
     <!-- ============================================== -->
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v11';
+        const STORAGE_KEY = 'pellet_mobile_final_v12';
         const COLORS = ['#d97706', '#0f172a', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04', '#475569'];
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
         const MONTHS_FULL = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -380,7 +413,7 @@
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
             // Migration robuste depuis les anciens caches
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v10') || localStorage.getItem('pellet_mobile_final_v9');
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v11') || localStorage.getItem('pellet_mobile_final_v10');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
