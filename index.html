@@ -214,14 +214,14 @@
             </div>
         </div>
 
-        <!-- Autonomie Card (PRÉDICTIVE) -->
+        <!-- Autonomie Card (PRÉDICTIVE V2) -->
         <div class="ios-card p-5 bg-slate-900 text-white relative overflow-hidden mb-6">
             <div class="absolute -right-6 -top-6 text-8xl opacity-10 rotate-12">⏳</div>
             <div class="flex justify-between items-start relative z-10">
                 <div>
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Autonomie</span>
                     <div class="text-5xl font-black mt-1" id="kpi-autonomie">0</div>
-                    <p class="text-slate-400 text-xs font-medium mt-1 text-brand-500">Prédiction intelligente (Jours)</p>
+                    <p id="kpi-autonomie-texte" class="text-slate-400 text-xs font-medium mt-1 text-brand-500">Prédiction intelligente</p>
                 </div>
                 <div class="text-right">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock Restant</span>
@@ -348,7 +348,7 @@
     <!-- SCRIPT APPLICATION                             -->
     <!-- ============================================== -->
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v14';
+        const STORAGE_KEY = 'pellet_mobile_final_v17';
         const COLORS = ['#d97706', '#0f172a', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04', '#475569'];
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
         const MONTHS_FULL = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -413,7 +413,7 @@
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
             // Migration robuste depuis les anciens caches
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v12') || localStorage.getItem('pellet_mobile_final_v11');
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v14') || localStorage.getItem('pellet_mobile_final_v12') || localStorage.getItem('pellet_mobile_final_v11');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
@@ -448,7 +448,7 @@
             document.getElementById('kpi-30d').textContent = vol30.toFixed(1);
             document.getElementById('kpi-avg').textContent = avg.toFixed(1);
             
-            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE INTELLIGENTE (V2 : Coefficient de Rigueur) ---
+            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE INTELLIGENTE (V2) ---
             let autonomiePrevue = 0;
             if (state.stock > 0 && state.data.length > 0) {
                 const monthSacs = Array(12).fill(0);
@@ -458,7 +458,6 @@
                 const minMonth = state.data[0].date.getMonth();
                 const maxMonth = state.data[state.data.length - 1].date.getMonth();
 
-                // 1. Calcul des années actives par mois pour le diviseur
                 for (let y = minYear; y <= maxYear; y++) {
                     for (let m = 0; m < 12; m++) {
                         if (y === minYear && m < minMonth) continue;
@@ -467,46 +466,50 @@
                     }
                 }
 
-                // 2. Total historique des sacs par mois
                 state.data.forEach(d => { monthSacs[d.date.getMonth()] += d.sacs; });
 
-                // 3. Taux de combustion historique quotidien pour chaque mois
                 const dailyBurnRateByMonth = Array(12).fill(0);
                 for (let m = 0; m < 12; m++) {
                     if (monthActiveYears[m] > 0) {
-                        const daysInM = new Date(2024, m + 1, 0).getDate(); // Nb jours/mois
+                        const daysInM = new Date(2024, m + 1, 0).getDate();
                         dailyBurnRateByMonth[m] = (monthSacs[m] / monthActiveYears[m]) / daysInM;
                     }
-                    if (dailyBurnRateByMonth[m] === 0) dailyBurnRateByMonth[m] = 0.05; // Plancher été
+                    if (dailyBurnRateByMonth[m] === 0) dailyBurnRateByMonth[m] = 0.05; 
                 }
 
-                // 4. NOUVEAU : Calcul du Coefficient de Rigueur (Severity Ratio)
-                // On compare la consommation récente avec la moyenne historique du mois actuel
                 let severityRatio = 1.0;
                 const currentMonth = last.date.getMonth();
                 
                 if (dailyBurnRateByMonth[currentMonth] > 0 && avg > 0) {
                     severityRatio = avg / dailyBurnRateByMonth[currentMonth];
-                    // Sécurité : on limite le coefficient pour éviter des prédictions aberrantes dues à un pic brutal
-                    // Limité entre 50% (hiver très doux) et 200% (hiver très rude)
                     if (severityRatio < 0.5) severityRatio = 0.5;
                     if (severityRatio > 2.0) severityRatio = 2.0;
                 }
 
-                // 5. Simulation jour par jour
                 let currentStock = state.stock;
-                let simDate = new Date(); // Départ de la projection = aujourd'hui
-                if (last.date > simDate) simDate = new Date(last.date);
+                let simDate = new Date(); 
+                if (last.date > simDate) simDate = new Date(last.date); 
 
                 while (currentStock > 0 && autonomiePrevue < 365) { 
                     const m = simDate.getMonth();
-                    
-                    // On applique la conso historique DU MOIS, ajustée par la rigueur ACTUELLE
                     const adjustedRate = dailyBurnRateByMonth[m] * severityRatio;
-                    
                     currentStock -= adjustedRate;
                     if (currentStock >= 0) autonomiePrevue++;
                     simDate.setDate(simDate.getDate() + 1); 
+                }
+                
+                // --- Traduction en Date ---
+                let dateEpuisement = new Date();
+                if (last.date > dateEpuisement) dateEpuisement = new Date(last.date);
+                dateEpuisement.setDate(dateEpuisement.getDate() + autonomiePrevue);
+                
+                if (autonomiePrevue > 0 && autonomiePrevue < 365) {
+                    const moisEpuisement = dateEpuisement.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                    document.getElementById('kpi-autonomie-texte').textContent = `Jusqu'en ${moisEpuisement}`;
+                } else if (autonomiePrevue >= 365) {
+                    document.getElementById('kpi-autonomie-texte').textContent = `Couvre tout l'été`;
+                } else {
+                    document.getElementById('kpi-autonomie-texte').textContent = `Prédiction intelligente`;
                 }
             }
 
