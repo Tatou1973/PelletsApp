@@ -92,19 +92,26 @@
         .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        /* Magie CSS native pour les filtres d'années */
-        .year-toggle input:checked + div {
-            border-color: currentColor !important;
-            background-color: currentColor !important;
-            color: #ffffff !important;
+        /* ========================================================= */
+        /* CORRECTION DÉFINITIVE CSS POUR LES BOUTONS D'ANNÉES       */
+        /* ========================================================= */
+        .year-toggle .filter-btn {
+            background-color: #ffffff;
+            color: #64748b;
+            border-color: #cbd5e1;
         }
-        .year-toggle input:checked + div .dot {
-            background-color: #ffffff !important;
+        .year-toggle .filter-btn .dot {
+            background-color: var(--brand-color);
         }
-        .year-toggle input:not(:checked) + div {
-            background-color: #ffffff !important;
-            color: #64748b !important;
-            border-color: #cbd5e1 !important;
+        /* État "Coché" : Le bouton prend la couleur de l'année */
+        .year-toggle input:checked + .filter-btn {
+            background-color: var(--brand-color);
+            border-color: var(--brand-color);
+            color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .year-toggle input:checked + .filter-btn .dot {
+            background-color: #ffffff;
         }
     </style>
 </head>
@@ -233,9 +240,9 @@
             </div>
         </div>
 
-        <!-- Comparaison des Hivers -->
+        <!-- Comparaison des Années (Corrigée et Étirée) -->
         <div class="ios-card p-4 overflow-hidden">
-            <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-3">Comparaison des Hivers</h3>
+            <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-3">Comparaison des années</h3>
             <p class="text-xs text-gray-500 mb-4">Touchez une année pour l'afficher ou la masquer.</p>
             <div id="filter-yoy" class="flex flex-wrap gap-2 mb-4"></div>
             
@@ -246,7 +253,7 @@
             </div>
         </div>
 
-        <!-- Trajectoire (Pace Chart) -->
+        <!-- Trajectoire (Pace Chart avec mathématiques réparées) -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Trajectoire Actuelle vs Moyenne</h3>
             <div class="chart-container">
@@ -304,8 +311,11 @@
         </label>
     </nav>
 
+    <!-- ============================================== -->
+    <!-- SCRIPT APPLICATION                             -->
+    <!-- ============================================== -->
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v10';
+        const STORAGE_KEY = 'pellet_mobile_final_v11';
         const COLORS = ['#d97706', '#0f172a', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04', '#475569'];
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
         const MONTHS_FULL = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -369,8 +379,8 @@
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
-            // Récupération des données locales (y compris des versions précédentes si existantes)
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v9') || localStorage.getItem('pellet_mobile_final_v8') || localStorage.getItem('pellet_mobile_final_v7');
+            // Migration robuste depuis les anciens caches
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v10') || localStorage.getItem('pellet_mobile_final_v9');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
@@ -490,6 +500,7 @@
             if (state.hiddenYears.has(yStr)) state.hiddenYears.delete(yStr);
             else state.hiddenYears.add(yStr);
             
+            // On se contente de dire à Chart.js d'afficher ou masquer la courbe
             chart.setDatasetVisibility(index, !state.hiddenYears.has(yStr));
             chart.update();
         }
@@ -536,11 +547,12 @@
                 const c = COLORS[i % COLORS.length]; 
                 const isChecked = !state.hiddenYears.has(y);
                 
+                // Intégration HTML du bouton liée à la CSS native et sans conflits
                 fil.insertAdjacentHTML('beforeend', `
-                    <label class="cursor-pointer year-toggle inline-block mb-2 mr-2 btn-press">
+                    <label class="cursor-pointer year-toggle inline-block mb-2 mr-2 btn-press" style="--brand-color: ${c};">
                         <input type="checkbox" class="sr-only" ${isChecked ? 'checked' : ''} onchange="window.toggleY('${y}',${i})">
-                        <div class="px-3 py-1.5 rounded-lg border-2 text-[11px] font-black transition-all flex items-center gap-1.5" style="color: ${c};">
-                            <span class="w-2 h-2 rounded-full dot" style="background-color: ${c}"></span>
+                        <div class="filter-btn px-3 py-1.5 rounded-lg border-2 text-[11px] font-black transition-all flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full dot"></span>
                             ${y}
                         </div>
                     </label>
@@ -557,16 +569,35 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
             });
 
-            // --- 3. GRAPHIQUE TRAJECTOIRE (PACE) ---
-            const years = [...new Set(state.data.map(d=>d.date.getFullYear()))];
-            const am = Array(12).fill(0); 
-            years.forEach(y => { 
-                const m = Array(12).fill(0); 
-                state.data.filter(d=>d.date.getFullYear()===y).forEach(d=>m[d.date.getMonth()]+=d.sacs); 
-                m.forEach((v,i)=>am[i]+=v/years.length); 
-            });
+            // --- 3. GRAPHIQUE TRAJECTOIRE (PACE) - MATHÉMATIQUES CORRIGÉES ---
+            const minYear = state.data[0].date.getFullYear();
+            const maxYear = state.data[state.data.length - 1].date.getFullYear();
+            const minMonth = state.data[0].date.getMonth();
+
+            // On compte combien d'années actives il y a eu pour chaque mois depuis l'origine
+            const monthActiveYearsCount = Array(12).fill(0);
+            for(let y = minYear; y <= maxYear; y++) {
+                for(let m = 0; m < 12; m++) {
+                    if (y === minYear && m < minMonth) continue;
+                    monthActiveYearsCount[m]++;
+                }
+            }
+
+            // Somme totale consommée pour chaque mois
+            const sumMonthly = Array(12).fill(0); 
+            state.data.forEach(d => { sumMonthly[d.date.getMonth()] += d.sacs; });
+
+            // On fait la vraie moyenne pondérée
+            const avgMonthly = Array(12).fill(0);
+            for(let m = 0; m < 12; m++) {
+                if (monthActiveYearsCount[m] > 0) {
+                    avgMonthly[m] = sumMonthly[m] / monthActiveYearsCount[m];
+                }
+            }
             
-            let rA = 0; const avgCum = am.map(v => { rA+=v; return parseFloat(rA.toFixed(1)); });
+            let rA = 0; 
+            const avgCum = avgMonthly.map(v => { rA+=v; return parseFloat(rA.toFixed(1)); });
+            
             const cy = maxYear; 
             const cm = state.data[state.data.length-1].date.getMonth();
             
