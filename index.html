@@ -273,7 +273,7 @@
             </div>
         </div>
 
-        <!-- Comparaison des Années -->
+        <!-- Comparaison des Années (Corrigée et Étirée) -->
         <div class="ios-card p-4 overflow-hidden">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-3">Comparaison des années</h3>
             <p class="text-xs text-gray-500 mb-4">Touchez une année pour l'afficher ou la masquer.</p>
@@ -286,7 +286,7 @@
             </div>
         </div>
 
-        <!-- Trajectoire (Pace Chart) -->
+        <!-- Trajectoire (Pace Chart avec mathématiques réparées) -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Trajectoire Actuelle vs Moyenne</h3>
             <div class="chart-container">
@@ -326,7 +326,7 @@
 
 
     <!-- ============================================== -->
-    <!-- Navigation Basse                               -->
+    <!-- Navigation Basse (Réordonnée)                  -->
     <!-- ============================================== -->
     <nav class="bottom-nav">
         <button onclick="setTab('dashboard')" id="nav-dashboard" class="nav-item active btn-press">
@@ -448,7 +448,7 @@
             document.getElementById('kpi-30d').textContent = vol30.toFixed(1);
             document.getElementById('kpi-avg').textContent = avg.toFixed(1);
             
-            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE INTELLIGENTE ---
+            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE INTELLIGENTE (V2 : Coefficient de Rigueur) ---
             let autonomiePrevue = 0;
             if (state.stock > 0 && state.data.length > 0) {
                 const monthSacs = Array(12).fill(0);
@@ -458,6 +458,7 @@
                 const minMonth = state.data[0].date.getMonth();
                 const maxMonth = state.data[state.data.length - 1].date.getMonth();
 
+                // 1. Calcul des années actives par mois pour le diviseur
                 for (let y = minYear; y <= maxYear; y++) {
                     for (let m = 0; m < 12; m++) {
                         if (y === minYear && m < minMonth) continue;
@@ -466,24 +467,44 @@
                     }
                 }
 
+                // 2. Total historique des sacs par mois
                 state.data.forEach(d => { monthSacs[d.date.getMonth()] += d.sacs; });
 
+                // 3. Taux de combustion historique quotidien pour chaque mois
                 const dailyBurnRateByMonth = Array(12).fill(0);
                 for (let m = 0; m < 12; m++) {
                     if (monthActiveYears[m] > 0) {
-                        const daysInM = new Date(2024, m + 1, 0).getDate(); // Nb de jours dans le mois
+                        const daysInM = new Date(2024, m + 1, 0).getDate(); // Nb jours/mois
                         dailyBurnRateByMonth[m] = (monthSacs[m] / monthActiveYears[m]) / daysInM;
                     }
-                    if (dailyBurnRateByMonth[m] === 0) dailyBurnRateByMonth[m] = 0.05; 
+                    if (dailyBurnRateByMonth[m] === 0) dailyBurnRateByMonth[m] = 0.05; // Plancher été
                 }
 
+                // 4. NOUVEAU : Calcul du Coefficient de Rigueur (Severity Ratio)
+                // On compare la consommation récente avec la moyenne historique du mois actuel
+                let severityRatio = 1.0;
+                const currentMonth = last.date.getMonth();
+                
+                if (dailyBurnRateByMonth[currentMonth] > 0 && avg > 0) {
+                    severityRatio = avg / dailyBurnRateByMonth[currentMonth];
+                    // Sécurité : on limite le coefficient pour éviter des prédictions aberrantes dues à un pic brutal
+                    // Limité entre 50% (hiver très doux) et 200% (hiver très rude)
+                    if (severityRatio < 0.5) severityRatio = 0.5;
+                    if (severityRatio > 2.0) severityRatio = 2.0;
+                }
+
+                // 5. Simulation jour par jour
                 let currentStock = state.stock;
-                let simDate = new Date(); // Prédiction à partir d'aujourd'hui
-                if (last.date > simDate) simDate = new Date(last.date); // Sécurité si saisie dans le futur
+                let simDate = new Date(); // Départ de la projection = aujourd'hui
+                if (last.date > simDate) simDate = new Date(last.date);
 
                 while (currentStock > 0 && autonomiePrevue < 365) { 
                     const m = simDate.getMonth();
-                    currentStock -= dailyBurnRateByMonth[m];
+                    
+                    // On applique la conso historique DU MOIS, ajustée par la rigueur ACTUELLE
+                    const adjustedRate = dailyBurnRateByMonth[m] * severityRatio;
+                    
+                    currentStock -= adjustedRate;
                     if (currentStock >= 0) autonomiePrevue++;
                     simDate.setDate(simDate.getDate() + 1); 
                 }
@@ -624,6 +645,7 @@
                 const c = COLORS[i % COLORS.length]; 
                 const isChecked = !state.hiddenYears.has(y);
                 
+                // Intégration HTML du bouton liée à la CSS native et sans conflits
                 fil.insertAdjacentHTML('beforeend', `
                     <label class="cursor-pointer year-toggle inline-block mb-2 mr-2 btn-press" style="--brand-color: ${c};">
                         <input type="checkbox" class="sr-only" ${isChecked ? 'checked' : ''} onchange="window.toggleY('${y}',${i})">
