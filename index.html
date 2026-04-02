@@ -139,7 +139,7 @@
         
         <header class="mb-6 flex justify-between items-center px-1">
             <div class="flex items-center gap-3">
-                <!-- NOUVEAU LOGO ANIMÉ RIGOLO (SVG) -->
+                <!-- LOGO ANIMÉ RIGOLO (SVG) -->
                 <div class="w-14 h-14 relative flex items-center justify-center">
                     <svg viewBox="0 0 100 100" class="w-full h-full absolute drop-shadow-md overflow-visible">
                         <g class="svg-pellet">
@@ -273,7 +273,7 @@
             </div>
         </div>
 
-        <!-- Comparaison des Années (Corrigée et Étirée) -->
+        <!-- Comparaison des Années -->
         <div class="ios-card p-4 overflow-hidden">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-3">Comparaison des années</h3>
             <p class="text-xs text-gray-500 mb-4">Touchez une année pour l'afficher ou la masquer.</p>
@@ -286,7 +286,7 @@
             </div>
         </div>
 
-        <!-- Trajectoire (Pace Chart avec mathématiques réparées) -->
+        <!-- Trajectoire (Pace Chart) -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Trajectoire Actuelle vs Moyenne</h3>
             <div class="chart-container">
@@ -326,7 +326,7 @@
 
 
     <!-- ============================================== -->
-    <!-- Navigation Basse (Réordonnée)                  -->
+    <!-- Navigation Basse                               -->
     <!-- ============================================== -->
     <nav class="bottom-nav">
         <button onclick="setTab('dashboard')" id="nav-dashboard" class="nav-item active btn-press">
@@ -348,7 +348,7 @@
     <!-- SCRIPT APPLICATION                             -->
     <!-- ============================================== -->
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v17';
+        const STORAGE_KEY = 'pellet_mobile_final_v18';
         const COLORS = ['#d97706', '#0f172a', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04', '#475569'];
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
         const MONTHS_FULL = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -413,7 +413,7 @@
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
             // Migration robuste depuis les anciens caches
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v14') || localStorage.getItem('pellet_mobile_final_v12') || localStorage.getItem('pellet_mobile_final_v11');
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v17') || localStorage.getItem('pellet_mobile_final_v14');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
@@ -648,7 +648,6 @@
                 const c = COLORS[i % COLORS.length]; 
                 const isChecked = !state.hiddenYears.has(y);
                 
-                // Intégration HTML du bouton liée à la CSS native et sans conflits
                 fil.insertAdjacentHTML('beforeend', `
                     <label class="cursor-pointer year-toggle inline-block mb-2 mr-2 btn-press" style="--brand-color: ${c};">
                         <input type="checkbox" class="sr-only" ${isChecked ? 'checked' : ''} onchange="window.toggleY('${y}',${i})">
@@ -738,16 +737,32 @@
             const s = parseFloat(document.getElementById('add-sacs').value);
             if (!dStr || isNaN(s)) { alert("Veuillez choisir un nombre de sacs et vérifier la date !"); return; }
             const d = new Date(dStr);
+            
             state.data.push({ date: d, ts: d.getTime(), sacs: s });
             state.data.sort((a,b) => a.ts - b.ts);
+            
+            // --- DÉDUCTION DU STOCK ---
+            state.stock = Math.max(0, state.stock - s);
+            document.getElementById('stock-mobile').value = state.stock;
+            // ---------------------------
+
             save(); updateUI();
             
             document.getElementById('add-sacs').selectedIndex = 0;
-            alert("✅ Remplissage validé !");
+            alert("✅ Remplissage validé et stock mis à jour !");
         }
 
         function deleteEntry(ts) {
             if (confirm("Supprimer définitivement ce remplissage ?")) {
+                
+                // --- RESTITUTION DU STOCK ---
+                const deletedItem = state.data.find(d => d.ts === ts);
+                if (deletedItem) {
+                    state.stock += deletedItem.sacs;
+                    document.getElementById('stock-mobile').value = state.stock;
+                }
+                // -----------------------------
+
                 state.data = state.data.filter(d => d.ts !== ts);
                 save(); updateUI();
             }
