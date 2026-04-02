@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- Look App Native iPhone -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Pelletor">
+    <meta name="apple-mobile-web-app-title" content="PelletsApp">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/785/785116.png">
 
-    <title>Pelletor</title>
+    <title>PelletsApp</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -132,26 +131,19 @@
 </head>
 <body>
 
-    <!-- ============================================== -->
-    <!-- Onglet 1 : PELLETOR (Accueil & Saisie)         -->
-    <!-- ============================================== -->
     <div id="tab-dashboard" class="tab-content active">
         
         <header class="mb-6 flex justify-between items-center px-1">
             <div class="flex items-center gap-3">
-                <!-- LOGO ANIMÉ RIGOLO (SVG) -->
                 <div class="w-14 h-14 relative flex items-center justify-center">
                     <svg viewBox="0 0 100 100" class="w-full h-full absolute drop-shadow-md overflow-visible">
                         <g class="svg-pellet">
-                            <!-- Flamme animée -->
                             <path class="svg-flame" d="M50 15 C 65 35 70 50 50 65 C 30 50 35 35 50 15 Z" fill="#f59e0b"/>
                             <path class="svg-flame" style="animation-delay: 0.2s; transform: scale(0.6);" d="M50 25 C 60 40 65 55 50 65 C 35 55 40 40 50 25 Z" fill="#fef08a"/>
                             
-                            <!-- Corps du granulé -->
                             <path d="M 30 55 L 30 80 Q 50 90 70 80 L 70 55 Z" fill="#78350f"/>
                             <ellipse cx="50" cy="55" rx="20" ry="10" fill="#b45309"/>
                             
-                            <!-- Visage Kawaii/Rigolo -->
                             <ellipse class="svg-eye" cx="42" cy="70" rx="2.5" ry="3.5" fill="#fff"/>
                             <ellipse class="svg-eye" cx="58" cy="70" rx="2.5" ry="3.5" fill="#fff"/>
                             <ellipse cx="37" cy="73" rx="2.5" ry="1.5" fill="#fca5a5" opacity="0.6"/>
@@ -161,7 +153,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-700">Pelletor</h1>
+                    <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-700">PelletsApp</h1>
                     <p class="text-ios-secondary text-sm font-medium mt-0.5" id="last-date-mobile">Aucune donnée</p>
                 </div>
             </div>
@@ -170,7 +162,6 @@
             </button>
         </header>
 
-        <!-- Saisie Rapide avec Menu Déroulant -->
         <div class="ios-card p-5 border-2 border-brand-500/20">
             <h3 class="text-xs font-black text-brand-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <span>✍️</span> Nouveau remplissage
@@ -198,7 +189,6 @@
             </div>
         </div>
 
-        <!-- KPI Grid -->
         <div class="grid grid-cols-2 gap-3 mb-4 w-full">
             <div class="ios-card p-4 mb-0">
                 <span class="text-[10px] font-black text-ios-secondary uppercase tracking-widest">30 Jours</span>
@@ -214,7 +204,6 @@
             </div>
         </div>
 
-        <!-- Autonomie Card (PRÉDICTIVE V2) -->
         <div class="ios-card p-5 bg-slate-900 text-white relative overflow-hidden mb-6">
             <div class="absolute -right-6 -top-6 text-8xl opacity-10 rotate-12">⏳</div>
             <div class="flex justify-between items-start relative z-10">
@@ -234,19 +223,14 @@
     </div>
 
 
-    <!-- ============================================== -->
-    <!-- Onglet 2 : ANALYSES                            -->
-    <!-- ============================================== -->
     <div id="tab-analytics" class="tab-content">
         <h1 class="text-3xl font-extrabold mb-6 px-1 text-slate-800">📈 Analyses</h1>
         
-        <!-- Bilan Annuel -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Volume par Année</h3>
             <div id="year-grid-mobile" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
         </div>
 
-        <!-- Extrêmes & Records -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Records & Statistiques</h3>
             <div class="grid grid-cols-2 gap-3">
@@ -273,7 +257,6 @@
             </div>
         </div>
 
-        <!-- Comparaison des Années -->
         <div class="ios-card p-4 overflow-hidden">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-3">Comparaison des années</h3>
             <p class="text-xs text-gray-500 mb-4">Touchez une année pour l'afficher ou la masquer.</p>
@@ -286,7 +269,6 @@
             </div>
         </div>
 
-        <!-- Trajectoire (Pace Chart) -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Trajectoire Actuelle vs Moyenne</h3>
             <div class="chart-container">
@@ -294,7 +276,6 @@
             </div>
         </div>
 
-        <!-- Évolution Historique -->
         <div class="ios-card p-4 overflow-hidden">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Évolution Historique Globale</h3>
             <div class="overflow-x-auto custom-scrollbar pb-2">
@@ -306,9 +287,6 @@
     </div>
 
 
-    <!-- ============================================== -->
-    <!-- Onglet 3 : JOURNAL                             -->
-    <!-- ============================================== -->
     <div id="tab-history" class="tab-content">
         <h1 class="text-3xl font-extrabold mb-6 px-1">📋 Journal</h1>
         <div class="ios-card overflow-hidden">
@@ -325,12 +303,9 @@
     </div>
 
 
-    <!-- ============================================== -->
-    <!-- Navigation Basse                               -->
-    <!-- ============================================== -->
     <nav class="bottom-nav">
         <button onclick="setTab('dashboard')" id="nav-dashboard" class="nav-item active btn-press">
-            <span class="icon">🔥</span><span>PELLETOR</span>
+            <span class="icon">🔥</span><span>PELLETSAPP</span>
         </button>
         <button onclick="setTab('analytics')" id="nav-analytics" class="nav-item btn-press">
             <span class="icon">📈</span><span>ANALYSES</span>
@@ -344,11 +319,8 @@
         </label>
     </nav>
 
-    <!-- ============================================== -->
-    <!-- SCRIPT APPLICATION                             -->
-    <!-- ============================================== -->
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v18';
+        const STORAGE_KEY = 'pellet_mobile_final_v20';
         const COLORS = ['#d97706', '#0f172a', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04', '#475569'];
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
         const MONTHS_FULL = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -413,7 +385,7 @@
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
             // Migration robuste depuis les anciens caches
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v17') || localStorage.getItem('pellet_mobile_final_v14');
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v18') || localStorage.getItem('pellet_mobile_final_v17');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
@@ -601,7 +573,6 @@
             if (state.hiddenYears.has(yStr)) state.hiddenYears.delete(yStr);
             else state.hiddenYears.add(yStr);
             
-            // Masque ou affiche la courbe
             chart.setDatasetVisibility(index, !state.hiddenYears.has(yStr));
             chart.update();
         }
@@ -673,11 +644,15 @@
             const minYear = state.data[0].date.getFullYear();
             const maxYear = state.data[state.data.length - 1].date.getFullYear();
             const minMonth = state.data[0].date.getMonth();
+            const maxMonth = state.data[state.data.length - 1].date.getMonth();
 
             const monthActiveYearsCount = Array(12).fill(0);
             for(let y = minYear; y <= maxYear; y++) {
                 for(let m = 0; m < 12; m++) {
                     if (y === minYear && m < minMonth) continue;
+                    // --- CORRECTION DU DIVISEUR : On bloque l'ajout des mois futurs de l'année en cours ---
+                    if (y === maxYear && m > maxMonth) continue; 
+                    // -----------------------------------------------------------------------------------------
                     monthActiveYearsCount[m]++;
                 }
             }
@@ -741,10 +716,9 @@
             state.data.push({ date: d, ts: d.getTime(), sacs: s });
             state.data.sort((a,b) => a.ts - b.ts);
             
-            // --- DÉDUCTION DU STOCK ---
+            // DÉDUCTION DU STOCK
             state.stock = Math.max(0, state.stock - s);
             document.getElementById('stock-mobile').value = state.stock;
-            // ---------------------------
 
             save(); updateUI();
             
@@ -754,14 +728,12 @@
 
         function deleteEntry(ts) {
             if (confirm("Supprimer définitivement ce remplissage ?")) {
-                
-                // --- RESTITUTION DU STOCK ---
+                // RESTITUTION DU STOCK
                 const deletedItem = state.data.find(d => d.ts === ts);
                 if (deletedItem) {
                     state.stock += deletedItem.sacs;
                     document.getElementById('stock-mobile').value = state.stock;
                 }
-                // -----------------------------
 
                 state.data = state.data.filter(d => d.ts !== ts);
                 save(); updateUI();
@@ -820,7 +792,7 @@
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'Pellets_Export.csv'; a.click();
+            const a = document.createElement('a'); a.href = url; a.download = 'PelletsApp_Export.csv'; a.click();
         }
 
         document.getElementById('stock-mobile').addEventListener('input', e => { state.stock = parseInt(e.target.value)||0; save(); updateUI(); });
