@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <!-- Look App Native iPhone -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PelletsApp">
@@ -131,19 +132,26 @@
 </head>
 <body>
 
+    <!-- ============================================== -->
+    <!-- Onglet 1 : PELLETSAPP (Accueil & Saisie)       -->
+    <!-- ============================================== -->
     <div id="tab-dashboard" class="tab-content active">
         
         <header class="mb-6 flex justify-between items-center px-1">
             <div class="flex items-center gap-3">
+                <!-- LOGO ANIMÉ RIGOLO (SVG) -->
                 <div class="w-14 h-14 relative flex items-center justify-center">
                     <svg viewBox="0 0 100 100" class="w-full h-full absolute drop-shadow-md overflow-visible">
                         <g class="svg-pellet">
+                            <!-- Flamme animée -->
                             <path class="svg-flame" d="M50 15 C 65 35 70 50 50 65 C 30 50 35 35 50 15 Z" fill="#f59e0b"/>
                             <path class="svg-flame" style="animation-delay: 0.2s; transform: scale(0.6);" d="M50 25 C 60 40 65 55 50 65 C 35 55 40 40 50 25 Z" fill="#fef08a"/>
                             
+                            <!-- Corps du granulé -->
                             <path d="M 30 55 L 30 80 Q 50 90 70 80 L 70 55 Z" fill="#78350f"/>
                             <ellipse cx="50" cy="55" rx="20" ry="10" fill="#b45309"/>
                             
+                            <!-- Visage Kawaii/Rigolo -->
                             <ellipse class="svg-eye" cx="42" cy="70" rx="2.5" ry="3.5" fill="#fff"/>
                             <ellipse class="svg-eye" cx="58" cy="70" rx="2.5" ry="3.5" fill="#fff"/>
                             <ellipse cx="37" cy="73" rx="2.5" ry="1.5" fill="#fca5a5" opacity="0.6"/>
@@ -162,6 +170,7 @@
             </button>
         </header>
 
+        <!-- Saisie Rapide avec Menu Déroulant -->
         <div class="ios-card p-5 border-2 border-brand-500/20">
             <h3 class="text-xs font-black text-brand-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <span>✍️</span> Nouveau remplissage
@@ -189,6 +198,7 @@
             </div>
         </div>
 
+        <!-- KPI Grid -->
         <div class="grid grid-cols-2 gap-3 mb-4 w-full">
             <div class="ios-card p-4 mb-0">
                 <span class="text-[10px] font-black text-ios-secondary uppercase tracking-widest">30 Jours</span>
@@ -204,6 +214,7 @@
             </div>
         </div>
 
+        <!-- Autonomie Card (PRÉDICTIVE V2) -->
         <div class="ios-card p-5 bg-slate-900 text-white relative overflow-hidden mb-6">
             <div class="absolute -right-6 -top-6 text-8xl opacity-10 rotate-12">⏳</div>
             <div class="flex justify-between items-start relative z-10">
@@ -223,14 +234,19 @@
     </div>
 
 
+    <!-- ============================================== -->
+    <!-- Onglet 2 : ANALYSES                            -->
+    <!-- ============================================== -->
     <div id="tab-analytics" class="tab-content">
         <h1 class="text-3xl font-extrabold mb-6 px-1 text-slate-800">📈 Analyses</h1>
         
+        <!-- Bilan Annuel -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Volume par Année</h3>
             <div id="year-grid-mobile" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
         </div>
 
+        <!-- Extrêmes & Records -->
         <div class="ios-card p-4">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Records & Statistiques</h3>
             <div class="grid grid-cols-2 gap-3">
@@ -257,6 +273,7 @@
             </div>
         </div>
 
+        <!-- Comparaison des Années -->
         <div class="ios-card p-4 overflow-hidden">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-3">Comparaison des années</h3>
             <p class="text-xs text-gray-500 mb-4">Touchez une année pour l'afficher ou la masquer.</p>
@@ -269,13 +286,24 @@
             </div>
         </div>
 
+        <!-- Trajectoire (Pace Chart avec Nouveautés YTD et Comparaison) -->
         <div class="ios-card p-4">
-            <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Trajectoire Actuelle vs Moyenne</h3>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                <div>
+                    <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest">Suivi de la Trajectoire</h3>
+                    <p class="text-sm font-bold text-slate-800 mt-1" id="pace-ytd-summary">Depuis janvier : -- sacs <span class="text-xs text-ui-muted font-normal">(Moyenne habituelle : --)</span></p>
+                </div>
+                <select id="pace-compare-select" class="bg-ios-bg border border-gray-200 text-xs font-bold p-2 rounded-lg text-slate-700 outline-none focus:ring-2 focus:ring-brand-500" onchange="window.updatePaceChart()">
+                    <option value="none">Comparer avec...</option>
+                    <!-- Rempli par JS -->
+                </select>
+            </div>
             <div class="chart-container">
                 <canvas id="chart-pace-mobile"></canvas>
             </div>
         </div>
 
+        <!-- Évolution Historique -->
         <div class="ios-card p-4 overflow-hidden">
             <h3 class="text-[10px] font-black text-ios-secondary uppercase tracking-widest mb-4">Évolution Historique Globale</h3>
             <div class="overflow-x-auto custom-scrollbar pb-2">
@@ -287,6 +315,9 @@
     </div>
 
 
+    <!-- ============================================== -->
+    <!-- Onglet 3 : JOURNAL                             -->
+    <!-- ============================================== -->
     <div id="tab-history" class="tab-content">
         <h1 class="text-3xl font-extrabold mb-6 px-1">📋 Journal</h1>
         <div class="ios-card overflow-hidden">
@@ -303,6 +334,9 @@
     </div>
 
 
+    <!-- ============================================== -->
+    <!-- Navigation Basse                               -->
+    <!-- ============================================== -->
     <nav class="bottom-nav">
         <button onclick="setTab('dashboard')" id="nav-dashboard" class="nav-item active btn-press">
             <span class="icon">🔥</span><span>PELLETSAPP</span>
@@ -319,8 +353,11 @@
         </label>
     </nav>
 
+    <!-- ============================================== -->
+    <!-- SCRIPT APPLICATION                             -->
+    <!-- ============================================== -->
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v20';
+        const STORAGE_KEY = 'pellet_mobile_final_v22';
         const COLORS = ['#d97706', '#0f172a', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04', '#475569'];
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
         const MONTHS_FULL = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -385,7 +422,7 @@
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
             // Migration robuste depuis les anciens caches
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v18') || localStorage.getItem('pellet_mobile_final_v17');
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v21') || localStorage.getItem('pellet_mobile_final_v20');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
@@ -415,13 +452,20 @@
             document.getElementById('last-date-mobile').textContent = "Dernier ajout : " + last.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
             
             const vol30 = state.data.reduce((acc, d) => d.ts > (last.ts - 30*86400000) ? acc + d.sacs : acc, 0);
-            const avg = vol30 / 30;
+            
+            // CORRECTION 1: Moyenne juste pour les nouveaux venus
+            const firstEverDate = state.data[0].date;
+            const actualDaysActive = Math.ceil((last.date - firstEverDate) / 86400000);
+            const divisor = Math.min(30, Math.max(1, actualDaysActive));
+            const avg = vol30 / divisor;
             
             document.getElementById('kpi-30d').textContent = vol30.toFixed(1);
             document.getElementById('kpi-avg').textContent = avg.toFixed(1);
             
-            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE INTELLIGENTE (V2) ---
+            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE INTELLIGENTE (V2.1) ---
             let autonomiePrevue = 0;
+            let dateEpuisement = new Date();
+            
             if (state.stock > 0 && state.data.length > 0) {
                 const monthSacs = Array(12).fill(0);
                 const monthActiveYears = Array(12).fill(0);
@@ -443,7 +487,8 @@
                 const dailyBurnRateByMonth = Array(12).fill(0);
                 for (let m = 0; m < 12; m++) {
                     if (monthActiveYears[m] > 0) {
-                        const daysInM = new Date(2024, m + 1, 0).getDate();
+                        // CORRECTION 3: Utilisation d'une année non-bissextile standard pour éviter l'anomalie du 29/02
+                        const daysInM = new Date(2023, m + 1, 0).getDate();
                         dailyBurnRateByMonth[m] = (monthSacs[m] / monthActiveYears[m]) / daysInM;
                     }
                     if (dailyBurnRateByMonth[m] === 0) dailyBurnRateByMonth[m] = 0.05; 
@@ -452,9 +497,14 @@
                 let severityRatio = 1.0;
                 const currentMonth = last.date.getMonth();
                 
-                if (dailyBurnRateByMonth[currentMonth] > 0 && avg > 0) {
-                    severityRatio = avg / dailyBurnRateByMonth[currentMonth];
-                    if (severityRatio < 0.5) severityRatio = 0.5;
+                if (dailyBurnRateByMonth[currentMonth] > 0) {
+                    if (avg > 0) {
+                        severityRatio = avg / dailyBurnRateByMonth[currentMonth];
+                    } else {
+                        // CORRECTION 5: Baisse de la prédiction si la moyenne actuelle est 0 (chaudière potentiellement coupée)
+                        severityRatio = 0.2; 
+                    }
+                    if (severityRatio < 0.2) severityRatio = 0.2;
                     if (severityRatio > 2.0) severityRatio = 2.0;
                 }
 
@@ -470,19 +520,28 @@
                     simDate.setDate(simDate.getDate() + 1); 
                 }
                 
-                // --- Traduction en Date ---
-                let dateEpuisement = new Date();
                 if (last.date > dateEpuisement) dateEpuisement = new Date(last.date);
                 dateEpuisement.setDate(dateEpuisement.getDate() + autonomiePrevue);
-                
-                if (autonomiePrevue > 0 && autonomiePrevue < 365) {
-                    const moisEpuisement = dateEpuisement.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-                    document.getElementById('kpi-autonomie-texte').textContent = `Jusqu'en ${moisEpuisement}`;
-                } else if (autonomiePrevue >= 365) {
-                    document.getElementById('kpi-autonomie-texte').textContent = `Couvre tout l'été`;
-                } else {
-                    document.getElementById('kpi-autonomie-texte').textContent = `Prédiction intelligente`;
-                }
+            }
+
+            // CORRECTION 4: Sémantique Humaine de l'affichage d'autonomie
+            const textElement = document.getElementById('kpi-autonomie-texte');
+            textElement.className = "text-xs font-medium mt-1 text-slate-400"; // Reset style
+
+            if (autonomiePrevue === 0) {
+                textElement.textContent = `Stock vide ou insuffisant`;
+                textElement.classList.add('text-red-500', 'font-bold');
+            } else if (autonomiePrevue <= 14) {
+                const dateExacte = dateEpuisement.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+                textElement.textContent = `Jusqu'au ${dateExacte}`;
+                textElement.classList.add('text-amber-500', 'font-bold');
+            } else if (autonomiePrevue < 365) {
+                const moisEpuisement = dateEpuisement.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+                textElement.textContent = `Jusqu'en ${moisEpuisement}`;
+                textElement.classList.add('text-brand-500');
+            } else {
+                textElement.textContent = `Couvre tout l'été`;
+                textElement.classList.add('text-brand-500');
             }
 
             document.getElementById('kpi-autonomie').textContent = autonomiePrevue >= 365 ? "> 365" : autonomiePrevue;
@@ -526,9 +585,25 @@
                 `);
             });
 
+            // GESTION DU MENU DÉROULANT POUR LA COMPARAISON DE TRAJECTOIRE
+            const compareSelect = document.getElementById('pace-compare-select');
+            const currentSelection = compareSelect.value;
+            compareSelect.innerHTML = '<option value="none">Comparer avec...</option>';
+            const availableYears = Object.keys(ym).sort((a,b) => b-a);
+            const curY = maxD.getFullYear().toString();
+            
+            availableYears.forEach(y => {
+                if (y !== curY) { // On ne propose pas l'année en cours dans la liste de comparaison
+                    compareSelect.insertAdjacentHTML('beforeend', `<option value="${y}">Année ${y}</option>`);
+                }
+            });
+            // Restaure la sélection si elle est toujours valide
+            if (availableYears.includes(currentSelection) && currentSelection !== curY) {
+                compareSelect.value = currentSelection;
+            }
+
             // EXTRÊMES
             let maxYS = 0, maxY = "----", minYS = Infinity, minY = "----";
-            const curY = maxD.getFullYear().toString();
             const firstY = minD.getFullYear().toString();
             const isFirstP = minD.getMonth() > 0;
 
@@ -573,8 +648,91 @@
             if (state.hiddenYears.has(yStr)) state.hiddenYears.delete(yStr);
             else state.hiddenYears.add(yStr);
             
+            // Masque ou affiche la courbe
             chart.setDatasetVisibility(index, !state.hiddenYears.has(yStr));
             chart.update();
+        }
+
+        // --- MOTEUR TRAJECTOIRE (AVEC COMPARAISON ET YTD) ---
+        window.updatePaceChart = function() {
+            if (state.data.length === 0) return;
+
+            const minYear = state.data[0].date.getFullYear();
+            const maxYear = state.data[state.data.length - 1].date.getFullYear();
+            const minMonth = state.data[0].date.getMonth();
+            const maxMonth = state.data[state.data.length - 1].date.getMonth();
+
+            const monthActiveYearsCount = Array(12).fill(0);
+            for(let y = minYear; y <= maxYear; y++) {
+                for(let m = 0; m < 12; m++) {
+                    if (y === minYear && m < minMonth) continue;
+                    if (y === maxYear && m > maxMonth) continue; 
+                    monthActiveYearsCount[m]++;
+                }
+            }
+
+            const sumMonthly = Array(12).fill(0); 
+            state.data.forEach(d => { sumMonthly[d.date.getMonth()] += d.sacs; });
+
+            const avgMonthly = Array(12).fill(0);
+            for(let m = 0; m < 12; m++) {
+                if (monthActiveYearsCount[m] > 0) {
+                    avgMonthly[m] = sumMonthly[m] / monthActiveYearsCount[m];
+                }
+            }
+            
+            let rA = 0; 
+            const avgCum = avgMonthly.map(v => { rA+=v; return parseFloat(rA.toFixed(1)); });
+            
+            const cy = maxYear; 
+            const cm = state.data[state.data.length-1].date.getMonth(); // Mois actuel
+            
+            let rC = 0; const curCum = []; 
+            for(let i=0; i<=cm; i++) { 
+                rC += state.data.filter(d=>d.date.getFullYear()===cy && d.date.getMonth()===i).reduce((s,d)=>s+d.sacs,0); 
+                curCum.push(rC); 
+            }
+
+            // --- Mise à jour du texte YTD ---
+            const ytdCurrent = curCum[curCum.length - 1] || 0;
+            const ytdAverage = avgCum[cm] || 0;
+            document.getElementById('pace-ytd-summary').innerHTML = `Depuis janvier : <span class="text-brand-600 font-black text-base">${ytdCurrent} sacs</span> <span class="text-[10px] text-slate-500 font-bold uppercase ml-1">(Moyenne à ce stade : ${ytdAverage})</span>`;
+
+            // --- Construction des jeux de données pour le graphique ---
+            const datasets = [
+                { label:`Année en cours (${cy})`, data:curCum, borderColor:'#d97706', fill:true, backgroundColor:'rgba(217,119,6,0.1)', tension:0.3, borderWidth:3 }, 
+                { label:'Moyenne Historique', data:avgCum, borderColor:'#94a3b8', borderDash:[5,5], tension:0.3, pointRadius:0, borderWidth:2 }
+            ];
+
+            // --- Ajout de l'année de comparaison ---
+            const compareSelect = document.getElementById('pace-compare-select');
+            const compYear = compareSelect ? compareSelect.value : 'none';
+            
+            if (compYear !== 'none') {
+                const compYearInt = parseInt(compYear);
+                let rComp = 0; const compCum = [];
+                for(let i=0; i<12; i++) {
+                    rComp += state.data.filter(d=>d.date.getFullYear()===compYearInt && d.date.getMonth()===i).reduce((s,d)=>s+d.sacs,0);
+                    compCum.push(rComp);
+                }
+                datasets.push({
+                    label:`Comparaison (${compYear})`, data:compCum, borderColor:'#3b82f6',
+                    fill:false, tension:0.3, borderWidth:2, pointRadius:2
+                });
+            }
+
+            // --- Dessin du graphique ---
+            const ctxP = document.getElementById('chart-pace-mobile').getContext('2d');
+            if(state.charts.pace) state.charts.pace.destroy();
+            state.charts.pace = new Chart(ctxP, {
+                type: 'line',
+                data: { labels: MONTHS, datasets: datasets }, 
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } }, 
+                    scales: { x: { grid: { display: false } } } 
+                }
+            });
         }
 
         function renderCharts() {
@@ -640,62 +798,8 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
             });
 
-            // --- 3. GRAPHIQUE TRAJECTOIRE (PACE) ---
-            const minYear = state.data[0].date.getFullYear();
-            const maxYear = state.data[state.data.length - 1].date.getFullYear();
-            const minMonth = state.data[0].date.getMonth();
-            const maxMonth = state.data[state.data.length - 1].date.getMonth();
-
-            const monthActiveYearsCount = Array(12).fill(0);
-            for(let y = minYear; y <= maxYear; y++) {
-                for(let m = 0; m < 12; m++) {
-                    if (y === minYear && m < minMonth) continue;
-                    // --- CORRECTION DU DIVISEUR : On bloque l'ajout des mois futurs de l'année en cours ---
-                    if (y === maxYear && m > maxMonth) continue; 
-                    // -----------------------------------------------------------------------------------------
-                    monthActiveYearsCount[m]++;
-                }
-            }
-
-            const sumMonthly = Array(12).fill(0); 
-            state.data.forEach(d => { sumMonthly[d.date.getMonth()] += d.sacs; });
-
-            const avgMonthly = Array(12).fill(0);
-            for(let m = 0; m < 12; m++) {
-                if (monthActiveYearsCount[m] > 0) {
-                    avgMonthly[m] = sumMonthly[m] / monthActiveYearsCount[m];
-                }
-            }
-            
-            let rA = 0; 
-            const avgCum = avgMonthly.map(v => { rA+=v; return parseFloat(rA.toFixed(1)); });
-            
-            const cy = maxYear; 
-            const cm = state.data[state.data.length-1].date.getMonth();
-            
-            let rC = 0; const curCum = []; 
-            for(let i=0; i<=cm; i++) { 
-                rC += state.data.filter(d=>d.date.getFullYear()===cy && d.date.getMonth()===i).reduce((s,d)=>s+d.sacs,0); 
-                curCum.push(rC); 
-            }
-
-            const ctxP = document.getElementById('chart-pace-mobile').getContext('2d');
-            if(state.charts.pace) state.charts.pace.destroy();
-            state.charts.pace = new Chart(ctxP, {
-                type: 'line',
-                data: { 
-                    labels: MONTHS, 
-                    datasets: [
-                        { label:`Année en cours (${cy})`, data:curCum, borderColor:'#d97706', fill:true, backgroundColor:'rgba(217,119,6,0.1)', tension:0.3, borderWidth:3 }, 
-                        { label:'Moyenne Historique', data:avgCum, borderColor:'#94a3b8', borderDash:[5,5], tension:0.3, pointRadius:0, borderWidth:2 }
-                    ] 
-                }, 
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } } }, 
-                    scales: { x: { grid: { display: false } } } 
-                }
-            });
+            // --- 3. GRAPHIQUE TRAJECTOIRE ---
+            window.updatePaceChart();
         }
 
         function setTab(t) {
@@ -716,21 +820,27 @@
             state.data.push({ date: d, ts: d.getTime(), sacs: s });
             state.data.sort((a,b) => a.ts - b.ts);
             
-            // DÉDUCTION DU STOCK
-            state.stock = Math.max(0, state.stock - s);
-            document.getElementById('stock-mobile').value = state.stock;
+            // CORRECTION 2: DÉDUCTION DU STOCK SECURISEE (Seulement si la date a moins de 24h)
+            const now = new Date();
+            const diffMs = Math.abs(now - d);
+            if (diffMs < 86400000) { 
+                state.stock = Math.max(0, state.stock - s);
+                document.getElementById('stock-mobile').value = state.stock;
+            }
 
             save(); updateUI();
             
             document.getElementById('add-sacs').selectedIndex = 0;
-            alert("✅ Remplissage validé et stock mis à jour !");
+            alert("✅ Remplissage validé !");
         }
 
         function deleteEntry(ts) {
             if (confirm("Supprimer définitivement ce remplissage ?")) {
-                // RESTITUTION DU STOCK
                 const deletedItem = state.data.find(d => d.ts === ts);
-                if (deletedItem) {
+                
+                // CORRECTION 2: RESTITUTION DU STOCK SECURISEE (Seulement si l'entrée supprimée a moins de 3 jours)
+                const now = new Date();
+                if (deletedItem && (now - deletedItem.date) < (86400000 * 3)) {
                     state.stock += deletedItem.sacs;
                     document.getElementById('stock-mobile').value = state.stock;
                 }
