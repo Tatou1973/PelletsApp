@@ -165,7 +165,7 @@
                     <p class="text-ios-secondary text-sm font-medium mt-0.5" id="last-date-mobile">Aucune donnée</p>
                 </div>
             </div>
-            <button onclick="exportCSV()" class="bg-white p-3 rounded-full shadow-sm text-brand-500 btn-press border border-gray-100 flex items-center justify-center" title="Sauvegarder">
+            <button onclick="exportCSV()" class="bg-white p-3 rounded-full shadow-sm text-brand-500 btn-press border border-gray-100 flex items-center justify-center" title="Sauvegarder et Exporter en CSV">
                 <span style="font-size: 1.2rem;">💾</span>
             </button>
         </header>
@@ -214,7 +214,7 @@
             </div>
         </div>
 
-        <!-- Autonomie Card (PRÉDICTIVE V2) -->
+        <!-- Autonomie Card (PRÉDICTIVE V2.1 + GESTION LIVRAISON) -->
         <div class="ios-card p-5 bg-slate-900 text-white relative overflow-hidden mb-6">
             <div class="absolute -right-6 -top-6 text-8xl opacity-10 rotate-12">⏳</div>
             <div class="flex justify-between items-start relative z-10">
@@ -223,11 +223,21 @@
                     <div class="text-5xl font-black mt-1" id="kpi-autonomie">0</div>
                     <p id="kpi-autonomie-texte" class="text-slate-400 text-xs font-medium mt-1 text-brand-500">Prédiction intelligente</p>
                 </div>
-                <div class="text-right">
+                <div class="text-right flex flex-col items-end">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock Restant</span>
-                    <div class="mt-2 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700 flex items-center">
+                    <div class="mt-1 bg-slate-800 px-3 py-2 rounded-xl border border-slate-700 flex items-center">
                         <input type="number" id="stock-mobile" value="15" min="0" class="w-10 bg-transparent text-white font-black text-center text-xl m-0 p-0">
                     </div>
+                    
+                    <!-- Bouton Déclarer Livraison -->
+                    <button onclick="declareDelivery()" class="mt-2 text-[10px] font-bold text-brand-400 bg-brand-500/10 px-2 py-1.5 rounded-lg border border-brand-500/20 hover:bg-brand-500/30 transition-colors flex items-center gap-1 active:scale-95">
+                        <span>📥</span> + Livraison
+                    </button>
+                    
+                    <!-- Affichage de la dernière livraison -->
+                    <p id="last-delivery-display" class="text-[9px] text-slate-400 mt-1 font-medium hidden text-right">
+                        Dernière: <span id="ld-qty" class="text-white font-bold"></span> sacs<br>le <span id="ld-date" class="text-white font-bold"></span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -357,7 +367,7 @@
     <!-- SCRIPT APPLICATION                             -->
     <!-- ============================================== -->
     <script>
-        const STORAGE_KEY = 'pellet_mobile_final_v22';
+        const STORAGE_KEY = 'pellet_mobile_final_v26';
         const COLORS = ['#d97706', '#0f172a', '#059669', '#dc2626', '#2563eb', '#7c3aed', '#db2777', '#0d9488', '#ca8a04', '#475569'];
         const MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
         const MONTHS_FULL = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
@@ -365,6 +375,8 @@
         const state = { 
             data: [], 
             stock: 15, 
+            lastDeliveryDate: null,
+            lastDeliveryQty: null,
             currentTab: 'dashboard', 
             charts: { history: null, yoy: null, pace: null },
             hiddenYears: new Set()
@@ -421,22 +433,54 @@
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('add-date').value = now.toISOString().slice(0, 16);
 
-            // Migration robuste depuis les anciens caches
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v21') || localStorage.getItem('pellet_mobile_final_v20');
+            // Migration robuste
+            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('pellet_mobile_final_v25') || localStorage.getItem('pellet_mobile_final_v24');
             if (saved) {
                 try {
                     const p = JSON.parse(saved);
                     state.data = p.data.map(d => ({ date: new Date(d.ts), ts: d.ts, sacs: d.sacs }));
                     state.stock = p.stock !== undefined ? p.stock : 15;
+                    state.lastDeliveryDate = p.lastDeliveryDate || null;
+                    state.lastDeliveryQty = p.lastDeliveryQty || null;
                     document.getElementById('stock-mobile').value = state.stock;
                 } catch (e) { state.data = []; }
             }
             updateUI();
         }
 
+        // --- NOUVELLE FONCTION: Déclarer une livraison ---
+        window.declareDelivery = function() {
+            const qty = prompt("📦 Combien de sacs avez-vous reçu lors de cette livraison ?");
+            if (qty === null) return; // L'utilisateur a annulé
+            
+            const parsedQty = parseInt(qty);
+            if (!isNaN(parsedQty) && parsedQty > 0) {
+                state.stock += parsedQty;
+                state.lastDeliveryDate = new Date().getTime();
+                state.lastDeliveryQty = parsedQty;
+                
+                document.getElementById('stock-mobile').value = state.stock;
+                save();
+                updateUI();
+                alert(`✅ Livraison enregistrée !\nVotre nouveau stock est de ${state.stock} sacs.`);
+            } else {
+                alert("❌ Quantité invalide. Veuillez entrer un nombre (ex: 72).");
+            }
+        };
+
         function updateUI() {
             const tb = document.getElementById('tbody-mobile');
             
+            // Affichage de la dernière livraison
+            const displayLD = document.getElementById('last-delivery-display');
+            if (state.lastDeliveryDate && state.lastDeliveryQty) {
+                displayLD.classList.remove('hidden');
+                document.getElementById('ld-qty').textContent = state.lastDeliveryQty;
+                document.getElementById('ld-date').textContent = new Date(state.lastDeliveryDate).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric'});
+            } else {
+                displayLD.classList.add('hidden');
+            }
+
             if (state.data.length === 0) {
                 document.getElementById('last-date-mobile').textContent = "Aucune donnée";
                 document.getElementById('kpi-30d').textContent = "0";
@@ -453,7 +497,6 @@
             
             const vol30 = state.data.reduce((acc, d) => d.ts > (last.ts - 30*86400000) ? acc + d.sacs : acc, 0);
             
-            // CORRECTION 1: Moyenne juste pour les nouveaux venus
             const firstEverDate = state.data[0].date;
             const actualDaysActive = Math.ceil((last.date - firstEverDate) / 86400000);
             const divisor = Math.min(30, Math.max(1, actualDaysActive));
@@ -462,7 +505,7 @@
             document.getElementById('kpi-30d').textContent = vol30.toFixed(1);
             document.getElementById('kpi-avg').textContent = avg.toFixed(1);
             
-            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE INTELLIGENTE (V2.1) ---
+            // --- MOTEUR D'AUTONOMIE PRÉDICTIVE ---
             let autonomiePrevue = 0;
             let dateEpuisement = new Date();
             
@@ -487,7 +530,6 @@
                 const dailyBurnRateByMonth = Array(12).fill(0);
                 for (let m = 0; m < 12; m++) {
                     if (monthActiveYears[m] > 0) {
-                        // CORRECTION 3: Utilisation d'une année non-bissextile standard pour éviter l'anomalie du 29/02
                         const daysInM = new Date(2023, m + 1, 0).getDate();
                         dailyBurnRateByMonth[m] = (monthSacs[m] / monthActiveYears[m]) / daysInM;
                     }
@@ -501,7 +543,6 @@
                     if (avg > 0) {
                         severityRatio = avg / dailyBurnRateByMonth[currentMonth];
                     } else {
-                        // CORRECTION 5: Baisse de la prédiction si la moyenne actuelle est 0 (chaudière potentiellement coupée)
                         severityRatio = 0.2; 
                     }
                     if (severityRatio < 0.2) severityRatio = 0.2;
@@ -524,7 +565,6 @@
                 dateEpuisement.setDate(dateEpuisement.getDate() + autonomiePrevue);
             }
 
-            // CORRECTION 4: Sémantique Humaine de l'affichage d'autonomie
             const textElement = document.getElementById('kpi-autonomie-texte');
             textElement.className = "text-xs font-medium mt-1 text-slate-400"; // Reset style
 
@@ -585,7 +625,6 @@
                 `);
             });
 
-            // GESTION DU MENU DÉROULANT POUR LA COMPARAISON DE TRAJECTOIRE
             const compareSelect = document.getElementById('pace-compare-select');
             const currentSelection = compareSelect.value;
             compareSelect.innerHTML = '<option value="none">Comparer avec...</option>';
@@ -593,16 +632,14 @@
             const curY = maxD.getFullYear().toString();
             
             availableYears.forEach(y => {
-                if (y !== curY) { // On ne propose pas l'année en cours dans la liste de comparaison
+                if (y !== curY) { 
                     compareSelect.insertAdjacentHTML('beforeend', `<option value="${y}">Année ${y}</option>`);
                 }
             });
-            // Restaure la sélection si elle est toujours valide
             if (availableYears.includes(currentSelection) && currentSelection !== curY) {
                 compareSelect.value = currentSelection;
             }
 
-            // EXTRÊMES
             let maxYS = 0, maxY = "----", minYS = Infinity, minY = "----";
             const firstY = minD.getFullYear().toString();
             const isFirstP = minD.getMonth() > 0;
@@ -641,19 +678,15 @@
             renderCharts();
         }
 
-        // --- FILTRES YoY ---
         window.toggleY = function(yStr, index) {
             const chart = state.charts.yoy;
             if(!chart) return;
             if (state.hiddenYears.has(yStr)) state.hiddenYears.delete(yStr);
             else state.hiddenYears.add(yStr);
-            
-            // Masque ou affiche la courbe
             chart.setDatasetVisibility(index, !state.hiddenYears.has(yStr));
             chart.update();
         }
 
-        // --- MOTEUR TRAJECTOIRE (AVEC COMPARAISON ET YTD) ---
         window.updatePaceChart = function() {
             if (state.data.length === 0) return;
 
@@ -685,7 +718,7 @@
             const avgCum = avgMonthly.map(v => { rA+=v; return parseFloat(rA.toFixed(1)); });
             
             const cy = maxYear; 
-            const cm = state.data[state.data.length-1].date.getMonth(); // Mois actuel
+            const cm = state.data[state.data.length-1].date.getMonth(); 
             
             let rC = 0; const curCum = []; 
             for(let i=0; i<=cm; i++) { 
@@ -693,18 +726,15 @@
                 curCum.push(rC); 
             }
 
-            // --- Mise à jour du texte YTD ---
             const ytdCurrent = curCum[curCum.length - 1] || 0;
             const ytdAverage = avgCum[cm] || 0;
             document.getElementById('pace-ytd-summary').innerHTML = `Depuis janvier : <span class="text-brand-600 font-black text-base">${ytdCurrent} sacs</span> <span class="text-[10px] text-slate-500 font-bold uppercase ml-1">(Moyenne à ce stade : ${ytdAverage})</span>`;
 
-            // --- Construction des jeux de données pour le graphique ---
             const datasets = [
                 { label:`Année en cours (${cy})`, data:curCum, borderColor:'#d97706', fill:true, backgroundColor:'rgba(217,119,6,0.1)', tension:0.3, borderWidth:3 }, 
                 { label:'Moyenne Historique', data:avgCum, borderColor:'#94a3b8', borderDash:[5,5], tension:0.3, pointRadius:0, borderWidth:2 }
             ];
 
-            // --- Ajout de l'année de comparaison ---
             const compareSelect = document.getElementById('pace-compare-select');
             const compYear = compareSelect ? compareSelect.value : 'none';
             
@@ -721,7 +751,6 @@
                 });
             }
 
-            // --- Dessin du graphique ---
             const ctxP = document.getElementById('chart-pace-mobile').getContext('2d');
             if(state.charts.pace) state.charts.pace.destroy();
             state.charts.pace = new Chart(ctxP, {
@@ -738,7 +767,6 @@
         function renderCharts() {
             if (state.data.length === 0) return;
 
-            // --- 1. GRAPHIQUE HISTORIQUE ---
             const mm = new Map();
             const minDate = state.data[0].date;
             const maxDate = state.data[state.data.length - 1].date;
@@ -764,7 +792,6 @@
                 plugins: [janLinesPlugin]
             });
 
-            // --- 2. GRAPHIQUE YoY ---
             const dataY = {}; 
             state.data.forEach(d => { 
                 const y = d.date.getFullYear().toString(); 
@@ -798,7 +825,6 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
             });
 
-            // --- 3. GRAPHIQUE TRAJECTOIRE ---
             window.updatePaceChart();
         }
 
@@ -820,7 +846,6 @@
             state.data.push({ date: d, ts: d.getTime(), sacs: s });
             state.data.sort((a,b) => a.ts - b.ts);
             
-            // CORRECTION 2: DÉDUCTION DU STOCK SECURISEE (Seulement si la date a moins de 24h)
             const now = new Date();
             const diffMs = Math.abs(now - d);
             if (diffMs < 86400000) { 
@@ -831,14 +856,13 @@
             save(); updateUI();
             
             document.getElementById('add-sacs').selectedIndex = 0;
-            alert("✅ Remplissage validé !");
+            alert("✅ Remplissage validé et stock mis à jour !");
         }
 
         function deleteEntry(ts) {
             if (confirm("Supprimer définitivement ce remplissage ?")) {
                 const deletedItem = state.data.find(d => d.ts === ts);
                 
-                // CORRECTION 2: RESTITUTION DU STOCK SECURISEE (Seulement si l'entrée supprimée a moins de 3 jours)
                 const now = new Date();
                 if (deletedItem && (now - deletedItem.date) < (86400000 * 3)) {
                     state.stock += deletedItem.sacs;
@@ -850,6 +874,7 @@
             }
         }
 
+        // --- IMPORTATION INTELLIGENTE DU STOCK ---
         function handleImport(input) {
             const f = input.files[0]; if(!f) return;
             const r = new FileReader();
@@ -857,16 +882,31 @@
                 const text = e.target.result;
                 const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim().length > 0);
                 const parsed = [];
-                let dIdx = -1, qIdx = -1;
+                let dIdx = -1, qIdx = -1, sIdx = -1, ldIdx = -1, lqIdx = -1;
 
+                // Identification des colonnes
                 for (let i = 0; i < Math.min(10, lines.length); i++) {
                     const cols = lines[i].split(/[,;\t](?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, ''));
                     const low = cols.map(c => c.trim().toLowerCase());
                     const pd = low.findIndex(c => c.includes('date') || c.includes('horodatage'));
                     const pq = low.findIndex(c => c.includes('quantit') || c.includes('sac') || c === 'qte');
-                    if (pd !== -1 && pq !== -1) { dIdx = pd; qIdx = pq; break; }
+                    const ps = low.findIndex(c => c === 'stock' || c === 'stock_actuel');
+                    const pld = low.findIndex(c => c.includes('datelivraison') || c.includes('date_livraison'));
+                    const plq = low.findIndex(c => c.includes('quantitelivraison') || c.includes('quantite_livraison'));
+                    
+                    if (pd !== -1 && pq !== -1) { 
+                        dIdx = pd; qIdx = pq; 
+                        if (ps !== -1) sIdx = ps;
+                        if (pld !== -1) ldIdx = pld;
+                        if (plq !== -1) lqIdx = plq;
+                        break; 
+                    }
                 }
                 if (dIdx === -1) { dIdx = 0; qIdx = 1; }
+
+                let importedStock = null;
+                let impLdDate = null;
+                let impLdQty = null;
 
                 lines.forEach((l) => {
                     const cols = l.split(/[,;\t](?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, ''));
@@ -878,11 +918,32 @@
                             parsed.push({ date: dobj, ts: dobj.getTime(), sacs: val });
                         }
                     }
+                    
+                    // On capte les infos de stock à la toute première ligne valide
+                    if (importedStock === null && sIdx !== -1 && cols.length > sIdx && cols[sIdx].trim() !== '') {
+                        const parsedStk = parseInt(cols[sIdx].trim());
+                        if (!isNaN(parsedStk)) importedStock = parsedStk;
+                    }
+                    if (impLdDate === null && ldIdx !== -1 && cols.length > ldIdx && cols[ldIdx].trim() !== '') {
+                        const dObj = new Date(cols[ldIdx].trim());
+                        if (!isNaN(dObj.getTime())) impLdDate = dObj.getTime();
+                    }
+                    if (impLdQty === null && lqIdx !== -1 && cols.length > lqIdx && cols[lqIdx].trim() !== '') {
+                        const parsedLq = parseInt(cols[lqIdx].trim());
+                        if (!isNaN(parsedLq)) impLdQty = parsedLq;
+                    }
                 });
 
                 if(parsed.length > 0) { 
-                    state.data = parsed.sort((a,b) => a.ts - b.ts); save(); updateUI(); 
-                    alert(`✅ Import réussi : ${parsed.length} lignes chargées.`);
+                    state.data = parsed.sort((a,b) => a.ts - b.ts); 
+                    
+                    if (importedStock !== null && !isNaN(importedStock)) state.stock = importedStock;
+                    if (impLdDate !== null && !isNaN(impLdDate)) state.lastDeliveryDate = impLdDate;
+                    if (impLdQty !== null && !isNaN(impLdQty)) state.lastDeliveryQty = impLdQty;
+                    
+                    document.getElementById('stock-mobile').value = state.stock;
+                    save(); updateUI(); 
+                    alert(`✅ Import réussi : ${parsed.length} lignes chargées.\nStock et livraisons restaurés.`);
                 } else {
                     alert("❌ Erreur : Aucune donnée lisible. Vérifiez le format.");
                 }
@@ -891,21 +952,43 @@
             r.readAsText(f);
         }
 
-        function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ data: state.data.map(d=>({ts:d.ts, sacs:d.sacs})), stock: state.stock })); }
+        function save() { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+                data: state.data.map(d=>({ts:d.ts, sacs:d.sacs})), 
+                stock: state.stock,
+                lastDeliveryDate: state.lastDeliveryDate,
+                lastDeliveryQty: state.lastDeliveryQty
+            })); 
+        }
         
+        // --- EXPORTATION BLINDÉE EN 1ÈRE LIGNE ---
         function exportCSV() {
             if(state.data.length === 0) { alert("Aucune donnée à exporter."); return; }
-            let csv = "Date;Quantité\n";
-            state.data.forEach(d => {
+            
+            let csv = "Date;Quantité;Stock;Date_Livraison;Quantite_Livraison\n";
+            
+            state.data.forEach((d, index) => {
                 const dt = d.date;
-                csv += `${dt.getFullYear()}-${(dt.getMonth()+1).toString().padStart(2,'0')}-${dt.getDate().toString().padStart(2,'0')} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')};${d.sacs}\n`;
+                const dateStr = `${dt.getFullYear()}-${(dt.getMonth()+1).toString().padStart(2,'0')}-${dt.getDate().toString().padStart(2,'0')} ${dt.getHours().toString().padStart(2,'0')}:${dt.getMinutes().toString().padStart(2,'0')}`;
+                
+                // Le stock et la livraison sont mis tout en haut pour être sûrs d'être vus et lus
+                const stockStr = (index === 0) ? state.stock : "";
+                const ldDateStr = (index === 0 && state.lastDeliveryDate) ? new Date(state.lastDeliveryDate).toISOString() : "";
+                const ldQtyStr = (index === 0 && state.lastDeliveryQty) ? state.lastDeliveryQty : "";
+                
+                csv += `${dateStr};${d.sacs};${stockStr};${ldDateStr};${ldQtyStr}\n`;
             });
+            
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = 'PelletsApp_Export.csv'; a.click();
         }
 
-        document.getElementById('stock-mobile').addEventListener('input', e => { state.stock = parseInt(e.target.value)||0; save(); updateUI(); });
+        document.getElementById('stock-mobile').addEventListener('change', e => { 
+            state.stock = parseInt(e.target.value)||0; 
+            save(); 
+            updateUI(); 
+        });
         
         init();
     </script>
